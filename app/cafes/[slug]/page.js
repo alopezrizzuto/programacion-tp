@@ -25,7 +25,7 @@ function Nivel({ valor }) {
     <>
       <span aria-hidden="true" className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
-          <span key={n} className={`h-1.5 w-6 ${n <= valor ? "bg-cafe" : "bg-crema"}`} />
+          <span key={n} className={`h-1.5 w-6 ${n <= valor ? "bg-marron" : "bg-crema"}`} />
         ))}
       </span>
       <span className="sr-only">{valor} de 5</span>
@@ -49,11 +49,11 @@ export default async function CafePage({ params }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <nav aria-label="Ruta de navegación" className="text-sm text-cafe">
+      <nav aria-label="Ruta de navegación" className="text-sm text-marron">
         <ol className="flex flex-wrap gap-2">
           <li><Link href="/" className="hover:underline">Inicio</Link> /</li>
-          <li><Link href="/catalogo" className="hover:underline">Catálogo</Link> /</li>
-          <li aria-current="page" className="text-espresso">{cafe.nombre}</li>
+          <li><Link href="/productos" className="hover:underline">Catálogo</Link> /</li>
+          <li aria-current="page" className="text-tostado">{cafe.nombre}</li>
         </ol>
       </nav>
 
@@ -61,74 +61,74 @@ export default async function CafePage({ params }) {
         <ImagenCafe cafe={cafe} sizes="(min-width: 1024px) 50vw, 100vw" priority />
 
         <div>
-          <p className="text-xs uppercase tracking-widest text-cafe">{perfil.nombre}</p>
-          <h1 className="mt-2 font-serif text-5xl font-semibold">{cafe.nombre}</h1>
-          <a href="#resenas" className="mt-3 inline-flex items-center gap-2 text-sm text-cafe hover:underline">
+          <p className="text-xs uppercase tracking-widest text-marron">{perfil.nombre}</p>
+          <h1 className="mt-2 font-display text-5xl">{cafe.nombre}</h1>
+          <a href="#resenas" className="mt-3 inline-flex items-center gap-2 text-sm text-marron hover:underline">
             <Estrellas puntaje={promedio} />
             {cafe.resenas.length} reseñas
           </a>
-          <p className="mt-6 text-cafe">{cafe.descripcion}</p>
+          <p className="mt-6 text-marron">{cafe.descripcion}</p>
 
           <SelectorCompra cafe={cafe} />
         </div>
       </div>
 
       <div className="mt-16 grid gap-6 md:grid-cols-2">
-        <section aria-labelledby="titulo-ficha" className="bg-beige p-8">
-          <h2 id="titulo-ficha" className="font-serif text-2xl font-semibold">Ficha del café</h2>
+        <section aria-labelledby="titulo-ficha" className="bg-kraft p-8">
+          <h2 id="titulo-ficha" className="font-display text-2xl">Ficha del café</h2>
           <dl className="mt-6 grid grid-cols-[7rem_1fr] items-center gap-y-4 text-sm">
-            <dt className="text-cafe">Origen</dt>
+            <dt className="text-marron">Origen</dt>
             <dd>{cafe.origen}</dd>
-            <dt className="text-cafe">Tostado</dt>
+            <dt className="text-marron">Tostado</dt>
             <dd className="first-letter:uppercase">{cafe.tostado}</dd>
-            <dt className="text-cafe">Acidez</dt>
+            <dt className="text-marron">Acidez</dt>
             <dd><Nivel valor={cafe.acidez} /></dd>
-            <dt className="text-cafe">Cuerpo</dt>
+            <dt className="text-marron">Cuerpo</dt>
             <dd><Nivel valor={cafe.cuerpo} /></dd>
-            <dt className="text-cafe">Notas</dt>
+            <dt className="text-marron">Notas</dt>
             <dd className="first-letter:uppercase">{cafe.notas.join(", ")}</dd>
           </dl>
         </section>
 
-        <section aria-labelledby="titulo-envios" className="border border-beige p-8">
-          <h2 id="titulo-envios" className="font-serif text-2xl font-semibold">Envío y frescura</h2>
+        <section aria-labelledby="titulo-envios" className="border border-kraft p-8">
+          <h2 id="titulo-envios" className="font-display text-2xl">Envío y frescura</h2>
           <ul className="mt-6 space-y-3 text-sm">
             {ENVIOS.map((envio) => (
               <li key={envio.zona}>
-                <span className="font-medium">{envio.zona}:</span> <span className="text-cafe">{envio.plazo}</span>
+                <span className="font-medium">{envio.zona}:</span> <span className="text-marron">{envio.plazo}</span>
               </li>
             ))}
             <li>
               <span className="font-medium">Envío gratis</span>{" "}
-              <span className="text-cafe">en compras desde {formatearPrecio(PROMOS.envioGratisDesde)}</span>
+              <span className="text-marron">en compras desde {formatearPrecio(PROMOS.envioGratisDesde)}</span>
             </li>
             <li>
               <span className="font-medium">Tostado esta semana:</span>{" "}
-              <span className="text-cafe">molemos y despachamos con menos de 7 días de tostado.</span>
+              <span className="text-marron">molemos y despachamos con menos de 7 días de tostado.</span>
             </li>
           </ul>
         </section>
       </div>
 
-      <section id="resenas" aria-labelledby="titulo-resenas" className="mt-20 scroll-mt-8">
-        <h2 id="titulo-resenas" className="font-serif text-3xl font-semibold">Reseñas</h2>
-        <p className="mt-3 flex items-center gap-3 text-cafe">
+      <section id="resenas" aria-labelledby="titulo-resenas" className="mt-20 scroll-mt-24">
+        <h2 id="titulo-resenas" className="font-display text-3xl">Reseñas</h2>
+        <p className="mt-3 flex items-center gap-3 text-marron">
           <Estrellas puntaje={promedio} className="h-5 w-5" />
           {promedio.toLocaleString("es-AR", { maximumFractionDigits: 1 })} de 5 · {cafe.resenas.length} reseñas
         </p>
         <ul className="mt-8 grid gap-6 md:grid-cols-3">
           {cafe.resenas.map((resena) => (
-            <li key={resena.autor} className="border border-beige p-6">
+            <li key={resena.autor} className="border border-kraft p-6">
               <Estrellas puntaje={resena.puntaje} />
               <p className="mt-3">{resena.texto}</p>
-              <p className="mt-4 text-sm text-cafe">{resena.autor}</p>
+              <p className="mt-4 text-sm text-marron">{resena.autor}</p>
             </li>
           ))}
         </ul>
       </section>
 
       <section aria-labelledby="titulo-relacionados" className="mt-20">
-        <h2 id="titulo-relacionados" className="font-serif text-3xl font-semibold">También te puede gustar</h2>
+        <h2 id="titulo-relacionados" className="font-display text-3xl">También te puede gustar</h2>
         <div className="mt-8 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {relacionados.map((otro) => (
             <TarjetaCafe key={otro.id} cafe={otro} />
