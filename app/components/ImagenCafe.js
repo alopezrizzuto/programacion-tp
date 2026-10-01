@@ -1,17 +1,18 @@
 import Image from "next/image";
 import IconoGrano from "./IconoGrano";
 
+// Color del grano provisorio según el tueste de cada perfil (más claro = tueste más claro)
 const COLOR_POR_PERFIL = {
-  frutal: "text-kraft",
+  frutal: "text-[#a8794f]",
   equilibrado: "text-marron",
   intenso: "text-tostado",
 };
 
 // Muestra la foto del café. Mientras no haya foto (imagen_url en null),
 // muestra un reemplazo provisorio del mismo tamaño.
-export default function ImagenCafe({ cafe, sizes, priority = false }) {
+export default function ImagenCafe({ cafe, sizes, priority = false, aspecto = "aspect-square" }) {
   return (
-    <div className="relative aspect-square overflow-hidden bg-kraft">
+    <div className={`relative ${aspecto} overflow-hidden bg-kraft`}>
       {cafe.imagen_url ? (
         <Image
           src={cafe.imagen_url}
