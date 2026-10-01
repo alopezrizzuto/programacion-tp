@@ -25,7 +25,7 @@ function Nivel({ valor }) {
     <>
       <span aria-hidden="true" className="flex gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
-          <span key={n} className={`h-1.5 w-6 ${n <= valor ? "bg-cafe" : "bg-beige"}`} />
+          <span key={n} className={`h-1.5 w-6 ${n <= valor ? "bg-cafe" : "bg-crema"}`} />
         ))}
       </span>
       <span className="sr-only">{valor} de 5</span>
