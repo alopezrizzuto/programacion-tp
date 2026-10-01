@@ -42,7 +42,7 @@ E-commerce de **café en bolsa** con variantes, más una línea chica de **acces
 
 ### Identidad visual: "Tostadero"
 - Inspirada en la bolsa de papel kraft y la bolsa de yute del café verde (origen, altura y lote estampados).
-- Paleta (definida una sola vez en `app/globals.css`): tostado `#2A1A12` (dominante: secciones oscuras, header, botones), crema `#F3EBDD` (fondo de lectura), kraft `#D6C1A0` (superficies), marrón `#6B4A35` (texto secundario), cereza `#9A2E22` (único acento: solo descuentos y urgencia de stock).
+- Paleta (definida una sola vez en `app/globals.css`): tostado `#2A1A12` (dominante: secciones oscuras, header, botones), crema `#F3EBDD` (fondo de lectura), kraft `#D6C1A0` (superficies), marrón `#634330` (texto secundario, AA sobre crema y kraft), cereza `#9A2E22` (único acento: solo descuentos y urgencia de stock).
 - Tipografía: una sola familia, **Archivo** (variable en ancho), con `next/font`. Títulos anchos y pesados como un sello; texto a 17 px; números de ancho fijo para datos y precios.
 - Evitar los "tics" de página generada: etiquetas en MAYÚSCULAS sobre cada título, textos unidos con "·", flechas "→" decorativas, numeración 01/02/03 si el contenido no es una secuencia.
 - Un solo momento memorable: la animación de la portada al scrollear (grano → molinillo → portafiltro → taza), hecha con SVG y respetando "reducir movimiento". El resto, sobrio.
