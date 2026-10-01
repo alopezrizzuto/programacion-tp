@@ -44,6 +44,17 @@ E-commerce de **un solo tipo de producto (café en bolsa)** con variantes:
 - Devuelve **café + molienda + tamaño sugeridos**, con botón para agregar al carrito.
 - Se implementa en la semana 4 como parte de **E3** (formulario dinámico + validación + fetch).
 
+### Identidad visual
+- Paleta (definida una sola vez en `app/globals.css`): crema `#F7F2EA` (fondo), beige `#E8DCCB` (superficies), espresso `#2B1D14` (texto y botones), marrón café `#5C3D2E` (secundario), caramelo `#A67B5B` (solo decorativo: no alcanza contraste para texto chico).
+- Estética premium minimalista: mucho aire, títulos con serifa (Cormorant Garamond) y texto en sans (Inter), ambas con `next/font`.
+
+### Incentivos de conversión
+Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
+- 10% OFF pagando por transferencia · 6 cuotas sin interés · envío gratis desde $100.000 · 5% OFF llevando 2 bolsas o más.
+- Tiempos de envío (CABA/GBA 24–48 h hábiles, interior 3–5 días hábiles), "tostado esta semana", aviso de stock bajo y reseñas en el detalle del café.
+- **En E2 son solo mensajes.** Antes de E6 hay que decidir cuáles se aplican de verdad al total de la orden (el descuento por cantidad es fácil de calcular en el servidor) y sacar o aclarar los que no, para que la demo sea coherente.
+- Las reseñas son datos de ejemplo. El footer aclara que es una tienda de demostración (proyecto académico).
+
 ### Requisitos obligatorios
 - Catálogo con **búsqueda y filtrado**: perfil, tostado, acidez, cuerpo, origen, peso, rango de precio, con stock y búsqueda por texto (nombre, origen, notas).
 - **Carrito y checkout** con Mercado Pago (sandbox).
@@ -109,6 +120,13 @@ Se valora el **desarrollo continuo**: commits frecuentes y entregas alineadas al
 | 7 | E6: carrito, checkout Mercado Pago sandbox, webhook |
 | 8 | Tests (Playwright), "Mis órdenes", documentación |
 | 9 | Pulido, README final, ensayo de la demo |
+
+## Pendientes de Agustín (no dar por hechos)
+Mientras no estén, el sitio usa reemplazos provisorios (bloque beige con un grano dibujado y el nombre en texto como logo).
+- [ ] **6 fotos de producto** (una por café, la bolsa; no hace falta una por peso). Cuadradas 1200×1200 px, JPG o WebP, mismo fondo crema/beige, misma luz y ángulo. En `public/cafes/` con el slug como nombre: `etiopia-yirgacheffe.jpg`, `kenia-aa.jpg`, `colombia-huila.jpg`, `guatemala-antigua.jpg`, `brasil-cerrado.jpg`, `blend-espresso.jpg`. Al tenerlas: completar `imagen` de cada café en `lib/cafes.js`.
+- [ ] **Foto principal de la portada** (opcional): horizontal 1920×1080 px, `public/hero.jpg`.
+- [ ] **Logo horizontal** (ícono + "Origen Café"): SVG o PNG transparente, `public/logo.svg`. Reemplaza el texto del `Header`.
+- [ ] **Ícono cuadrado** para la pestaña del navegador: PNG 512×512, `app/icon.png` (reemplaza `app/favicon.ico`).
 
 ## Convenciones de trabajo
 - **Nunca trabajar directo en `main`.** Una rama por tarea (`feat/landing`, `fix/filtros`) y PR hacia `main`.
