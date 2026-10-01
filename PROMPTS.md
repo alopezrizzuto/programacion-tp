@@ -19,4 +19,8 @@ Registro de los prompts usados con IA durante el proyecto. Los marcados con ⭐ 
 **Prompt:** "¿Cómo paso este proyecto a Claude Code?"
 **Resultado:** Claude Code no ve los chats de claude.ai. El contexto se pasa con un `CLAUDE.md` en la raíz del repo, que se lee al inicio de cada sesión.
 
+## 3. ⭐ Cambio de idea base: de manteles a café — 29/09/2026 (Claude Code)
+**Prompt:** Le pedí cambiar la idea base del proyecto a una tienda de café de especialidad y actualizar `CLAUDE.md`, la portada y la bitácora, explicando antes qué archivos iba a tocar.
+**Resultado:** Cambio de idea base de manteles a café de especialidad. Se definieron 3 perfiles con 2 cafés cada uno, variantes por peso y molienda como opción del pedido (no variante) para evitar 90 combinaciones de stock. Se agregó el cuestionario "Elegí tu café" como parte de E3. Nombre provisorio de la tienda: "Origen Café".
+
 ---
