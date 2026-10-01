@@ -3,13 +3,13 @@
 export default function Campo({ id, etiqueta, type = "text", autoComplete }) {
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-medium">{etiqueta}</label>
+      <label htmlFor={id} className="text-sm font-semibold">{etiqueta}</label>
       <input
         id={id}
         name={id}
         type={type}
         autoComplete={autoComplete}
-        className="mt-2 w-full border border-cafe bg-crema px-3 py-3"
+        className="mt-2 w-full rounded-xl border border-marron/40 bg-crema px-4 py-3"
       />
     </div>
   );

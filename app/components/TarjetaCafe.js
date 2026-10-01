@@ -12,26 +12,26 @@ export default function TarjetaCafe({ cafe }) {
     <article className="group relative flex flex-col">
       <ImagenCafe cafe={cafe} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
       {!tieneStock(cafe) && (
-        <p className="absolute left-3 top-3 bg-espresso px-2 py-1 text-xs text-crema">Sin stock</p>
+        <p className="absolute left-3 top-3 bg-tostado px-2 py-1 text-xs text-crema">Sin stock</p>
       )}
 
       <div className="mt-4 flex flex-1 flex-col gap-1">
-        <p className="text-xs uppercase tracking-widest text-cafe">{obtenerPerfil(cafe.perfil).nombre}</p>
-        <h3 className="font-serif text-2xl font-semibold">
+        <p className="text-xs uppercase tracking-widest text-marron">{obtenerPerfil(cafe.perfil).nombre}</p>
+        <h3 className="font-display text-2xl">
           <Link href={`/cafes/${cafe.slug}`} className="after:absolute after:inset-0 group-hover:underline">
             {cafe.nombre}
           </Link>
         </h3>
-        <p className="text-sm text-cafe">{cafe.notas.join(" · ")}</p>
-        <p className="mt-1 flex items-center gap-2 text-xs text-cafe">
+        <p className="text-sm text-marron">{cafe.notas.join(" · ")}</p>
+        <p className="mt-1 flex items-center gap-2 text-xs text-marron">
           <Estrellas puntaje={promedioResenas(cafe)} />
           <span>({cafe.resenas.length})</span>
         </p>
         <p className="mt-2">
-          <span className="text-sm text-cafe">Desde </span>
+          <span className="text-sm text-marron">Desde </span>
           <span className="font-medium">{formatearPrecio(desde)}</span>
         </p>
-        <p className="text-sm text-cafe">{formatearPrecio(precioTransferencia(desde))} con transferencia</p>
+        <p className="text-sm text-marron">{formatearPrecio(precioTransferencia(desde))} con transferencia</p>
       </div>
     </article>
   );

@@ -33,8 +33,8 @@ export default function SelectorCompra({ cafe }) {
           {cafe.variantes.map((v) => (
             <label
               key={v.id}
-              className={`flex cursor-pointer flex-col items-center border px-2 py-3 text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-cafe ${
-                v.id === varianteId ? "border-espresso bg-espresso text-crema" : "border-cafe hover:bg-beige"
+              className={`flex cursor-pointer flex-col items-center border px-2 py-3 text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-marron ${
+                v.id === varianteId ? "border-tostado bg-tostado text-crema" : "border-marron hover:bg-kraft"
               } ${v.stock === 0 ? "cursor-not-allowed opacity-60" : ""}`}
             >
               <input
@@ -55,11 +55,11 @@ export default function SelectorCompra({ cafe }) {
 
       <div>
         <p className="text-3xl font-medium">{formatearPrecio(variante.precio)}</p>
-        <p className="mt-1 text-sm text-cafe">
+        <p className="mt-1 text-sm text-marron">
           {PROMOS.cuotasSinInteres} cuotas sin interés de {formatearPrecio(valorCuota(variante.precio))}
         </p>
-        <p className="text-sm text-cafe">
-          <strong className="font-medium text-espresso">{formatearPrecio(precioTransferencia(variante.precio))}</strong>{" "}
+        <p className="text-sm text-marron">
+          <strong className="font-medium text-tostado">{formatearPrecio(precioTransferencia(variante.precio))}</strong>{" "}
           con transferencia ({PROMOS.descuentoTransferencia}% OFF)
         </p>
         {hayStock && variante.stock <= STOCK_BAJO && (
@@ -74,7 +74,7 @@ export default function SelectorCompra({ cafe }) {
             id="molienda"
             value={molienda}
             onChange={(evento) => setMolienda(evento.target.value)}
-            className="mt-2 w-full border border-cafe bg-crema px-3 py-3"
+            className="mt-2 w-full border border-marron bg-crema px-3 py-3"
           >
             {MOLIENDAS.map((m) => (
               <option key={m.id} value={m.id}>
@@ -93,23 +93,23 @@ export default function SelectorCompra({ cafe }) {
             value={cantidad}
             disabled={!hayStock}
             onChange={(evento) => setCantidad(Math.max(1, Math.min(Number(evento.target.value), variante.stock)))}
-            className="mt-2 w-full border border-cafe bg-crema px-3 py-3"
+            className="mt-2 w-full border border-marron bg-crema px-3 py-3"
           />
         </div>
       </div>
 
       {/* aria-live: los lectores de pantalla anuncian los cambios de este bloque */}
-      <div aria-live="polite" className="space-y-1 border-t border-beige pt-6 text-sm">
+      <div aria-live="polite" className="space-y-1 border-t border-kraft pt-6 text-sm">
         {cantidad >= desdeUnidades ? (
           <p>
             Llevando {cantidad} bolsas: <strong className="font-medium">{porcentaje}% OFF</strong>. Total{" "}
-            <s className="text-cafe">{formatearPrecio(subtotal)}</s>{" "}
+            <s className="text-marron">{formatearPrecio(subtotal)}</s>{" "}
             <strong className="font-medium">{formatearPrecio(total)}</strong>
           </p>
         ) : (
-          <p className="text-cafe">Sumá otra bolsa y ahorrá {porcentaje}% sobre el total.</p>
+          <p className="text-marron">Sumá otra bolsa y ahorrá {porcentaje}% sobre el total.</p>
         )}
-        <p className="text-cafe">
+        <p className="text-marron">
           {faltaParaEnvioGratis > 0
             ? `Te faltan ${formatearPrecio(faltaParaEnvioGratis)} para el envío gratis.`
             : "¡Tenés envío gratis!"}
@@ -120,11 +120,11 @@ export default function SelectorCompra({ cafe }) {
         <button
           type="submit"
           disabled
-          className="w-full bg-espresso px-6 py-4 text-crema disabled:cursor-not-allowed disabled:opacity-60"
+          className="boton w-full"
         >
           Agregar al carrito
         </button>
-        <p className="mt-2 text-center text-xs text-cafe">El carrito se habilita en la próxima etapa del proyecto.</p>
+        <p className="mt-2 text-center text-xs text-marron">El carrito se habilita en la próxima etapa del proyecto.</p>
       </div>
     </form>
   );

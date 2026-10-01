@@ -8,10 +8,10 @@ export const metadata = {
 export default function LoginPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <h1 className="font-serif text-5xl font-semibold">Ingresar</h1>
-      <p className="mt-3 text-cafe">Entrá para seguir tus pedidos y comprar más rápido.</p>
+      <h1 className="font-display text-5xl">Ingresar</h1>
+      <p className="mt-3 text-marron">Entrá para seguir tus pedidos y comprar más rápido.</p>
 
-      <form className="mt-10 space-y-6">
+      <form className="mt-10 space-y-6 rounded-3xl bg-kraft/50 p-6 sm:p-8">
         <Campo id="email" etiqueta="Email" type="email" autoComplete="email" />
         <Campo id="password" etiqueta="Contraseña" type="password" autoComplete="current-password" />
         <div>
@@ -19,17 +19,17 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled
-            className="w-full bg-espresso px-6 py-4 text-crema disabled:cursor-not-allowed disabled:opacity-60"
+            className="boton w-full"
           >
             Ingresar
           </button>
-          <p className="mt-2 text-center text-xs text-cafe">El ingreso se habilita en la próxima etapa del proyecto.</p>
+          <p className="mt-2 text-center text-sm text-marron">El ingreso se habilita en la próxima etapa del proyecto.</p>
         </div>
       </form>
 
-      <p className="mt-10 text-center text-sm text-cafe">
+      <p className="mt-10 text-center text-sm text-marron">
         ¿No tenés cuenta?{" "}
-        <Link href="/registro" className="text-espresso underline">Creá una</Link>
+        <Link href="/registro" className="text-tostado underline">Creá una</Link>
       </p>
     </div>
   );

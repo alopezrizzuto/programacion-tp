@@ -1,26 +1,90 @@
 @import "tailwindcss";
 
-/* Paleta de Origen Café: se usa con clases como bg-crema, text-espresso, border-beige */
+/* Paleta "Tostadero": se usa con clases como bg-tostado, text-marron, border-kraft */
 @theme {
-  --color-crema: #f7f2ea;
-  --color-beige: #e8dccb;
-  --color-espresso: #2b1d14;
-  --color-cafe: #5c3d2e;
-  --color-caramelo: #a67b5b; /* solo decorativo: no alcanza contraste para texto chico */
+  --color-tostado: #2a1a12; /* dominante: header, secciones oscuras, botones */
+  --color-crema: #f3ebdd; /* fondo de lectura */
+  --color-kraft: #d6c1a0; /* el papel de la bolsa: superficies */
+  --color-marron: #634330; /* texto secundario (contraste AA sobre crema y kraft) */
+  --color-cereza: #9a2e22; /* único acento: descuentos y stock bajo. Solo sobre crema */
+
+  /* Texto base de 17 px, más cómodo de leer que 16 */
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
 }
 
-/* Tipografías cargadas con next/font en layout.js */
+/* Tipografía cargada con next/font en layout.js */
 @theme inline {
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-cormorant);
+  --font-sans: var(--font-archivo);
+}
+
+/* Títulos: la misma familia, ensanchada y pesada, como el sello de una bolsa */
+@utility font-display {
+  font-family: var(--font-archivo);
+  font-stretch: 120%;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+}
+
+/* Botones: un estilo principal y uno secundario para toda la tienda */
+@utility boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-tostado);
+  color: var(--color-crema);
+  padding: 0.85rem 1.75rem;
+  font-weight: 600;
+  transition: background-color 150ms;
+  &:hover {
+    background: var(--color-marron);
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    background: var(--color-tostado);
+  }
+}
+
+@utility boton-secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  padding: 0.8rem 1.7rem;
+  font-weight: 600;
+  transition: background-color 150ms;
+  &:hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
 }
 
 body {
   background: var(--color-crema);
-  color: var(--color-espresso);
+  color: var(--color-tostado);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-cafe);
+  outline: 2px solid currentColor;
   outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }
