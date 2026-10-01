@@ -1,45 +1,58 @@
 import Link from "next/link";
-import { ENVIOS, PROMOS } from "@/lib/tienda";
+import { PERFILES } from "@/lib/cafes";
+import { ENVIOS, PROMOS, formatearPrecio } from "@/lib/tienda";
 
 export default function Footer() {
   return (
-    <footer className="mt-24 bg-beige text-sm">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <p className="font-serif text-2xl font-semibold">Origen Café</p>
-          <p className="mt-2 text-cafe">Café de especialidad, tostado cada semana en Buenos Aires.</p>
+    <footer className="mt-24 bg-tostado text-kraft">
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-16 sm:px-6">
+        <div className="grid gap-12 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
+          <div>
+            <p className="font-display text-3xl text-crema">Origen Café</p>
+            <p className="mt-3 max-w-xs">
+              Café de especialidad tostado cada semana en Buenos Aires y molido para tu método.
+            </p>
+          </div>
+
+          <nav aria-label="Productos">
+            <h2 className="font-semibold text-crema">Productos</h2>
+            <ul className="mt-4 space-y-2">
+              {PERFILES.map((perfil) => (
+                <li key={perfil.id}>
+                  <Link href={`/productos#${perfil.id}`} className="hover:text-crema">Cafés {perfil.plural.toLowerCase()}</Link>
+                </li>
+              ))}
+              <li><Link href="/productos#accesorios" className="hover:text-crema">Accesorios</Link></li>
+            </ul>
+          </nav>
+
+          <nav aria-label="Ayuda">
+            <h2 className="font-semibold text-crema">Ayuda</h2>
+            <ul className="mt-4 space-y-2">
+              <li><Link href="/#elegi" className="hover:text-crema">Elegí tu café ideal</Link></li>
+              <li><Link href="/contacto" className="hover:text-crema">Contacto</Link></li>
+              <li><Link href="/login" className="hover:text-crema">Ingresar</Link></li>
+              <li><Link href="/registro" className="hover:text-crema">Crear cuenta</Link></li>
+            </ul>
+          </nav>
+
+          <div>
+            <h2 className="font-semibold text-crema">Envíos y pagos</h2>
+            <ul className="mt-4 space-y-2">
+              {ENVIOS.map((envio) => (
+                <li key={envio.zona}>{envio.zona}: {envio.plazo}</li>
+              ))}
+              <li>Envío gratis desde {formatearPrecio(PROMOS.envioGratisDesde)}</li>
+              <li>{PROMOS.cuotasSinInteres} cuotas sin interés con Mercado Pago</li>
+            </ul>
+          </div>
         </div>
 
-        <nav aria-label="Tienda">
-          <h2 className="font-medium">Tienda</h2>
-          <ul className="mt-3 space-y-2 text-cafe">
-            <li><Link href="/catalogo" className="hover:underline">Catálogo</Link></li>
-            <li><Link href="/carrito" className="hover:underline">Carrito</Link></li>
-          </ul>
-        </nav>
-
-        <nav aria-label="Tu cuenta">
-          <h2 className="font-medium">Tu cuenta</h2>
-          <ul className="mt-3 space-y-2 text-cafe">
-            <li><Link href="/login" className="hover:underline">Ingresar</Link></li>
-            <li><Link href="/registro" className="hover:underline">Crear cuenta</Link></li>
-          </ul>
-        </nav>
-
-        <div>
-          <h2 className="font-medium">Envíos y pagos</h2>
-          <ul className="mt-3 space-y-2 text-cafe">
-            {ENVIOS.map((envio) => (
-              <li key={envio.zona}>{envio.zona}: {envio.plazo}</li>
-            ))}
-            <li>{PROMOS.cuotasSinInteres} cuotas sin interés con Mercado Pago</li>
-          </ul>
-        </div>
+        <p className="mt-16 border-t border-white/10 pt-6 text-sm">
+          Tienda de demostración: proyecto académico de Programación Web (ITBA). No se realizan ventas reales y las
+          reseñas y estadísticas son de ejemplo.
+        </p>
       </div>
-
-      <p className="border-t border-crema px-4 py-4 text-center text-xs text-cafe">
-        Tienda de demostración · Proyecto académico de Programación Web (ITBA). No se realizan ventas reales.
-      </p>
     </footer>
   );
 }
