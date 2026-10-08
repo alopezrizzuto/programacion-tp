@@ -36,16 +36,21 @@ E-commerce de **café en bolsa** con variantes, más una línea chica de **acces
 - No es variante para no multiplicar el stock: 6 cafés × 3 pesos × 5 moliendas serían 90 combinaciones. El stock es por café y peso.
 
 ### "Elegí tu café" (cuestionario de recomendación)
-- Vive en la **portada** (sección `#elegi`, link "Elegí tu café ideal" del header): el usuario elige 2 o 3 preferencias (sabor, con/sin leche, método), confirma y aparecen abajo los cafés recomendados con el motivo. Se puede reiniciar.
-- Lógica **por reglas/puntaje (sin IA)** en `lib/recomendacion.js`. Hoy corre en el navegador; en **E3** pasa al Route Handler `POST /api/recomendacion` y el formulario la consulta con `fetch` (formulario dinámico + validación + fetch).
-- Devuelve los cafés sugeridos (+ molienda y tamaño sugeridos), con botón para agregar al carrito.
+- Vive en la **portada** (sección `#elegi`, link "Elegí tu café ideal" del header). 4 preguntas en lenguaje simple, una respuesta cada una:
+  1. ¿Cómo te gusta el café? Suave / Medio / Fuerte → intensidad (según el tostado).
+  2. ¿Te gusta que sea ácido? Poco / Algo / Mucho → acidez.
+  3. ¿Cómo lo tomás? Solo / Con leche → con leche suma a los de más cuerpo.
+  4. ¿Cómo lo preparás? Espresso / Moka / Filtro o V60 / Prensa francesa / Lo muelo yo → **molienda sugerida**.
+- Hay que responder las 4 para confirmar (el error dice cuáles faltan). Aparecen 3 cafés con % de coincidencia, motivos y molienda sugerida. Si cambia una respuesta después de confirmar, los resultados se actualizan solos; "Empezar de nuevo" reinicia todo.
+- Lógica **por reglas/puntaje (sin IA)** en `lib/recomendacion.js` (`validarRespuestas` y `recomendar`). Hoy corre en el navegador; en **E3** pasa al Route Handler `POST /api/recomendacion` y el formulario la consulta con `fetch` (formulario dinámico + validación + fetch).
+- En PR del carrito: botón para agregar el café recomendado con la molienda sugerida.
 
 ### Identidad visual: "Tostadero"
 - Inspirada en la bolsa de papel kraft y la bolsa de yute del café verde (origen, altura y lote estampados).
 - Paleta (definida una sola vez en `app/globals.css`): tostado `#2A1A12` (dominante: secciones oscuras, header, botones), crema `#F3EBDD` (fondo de lectura), kraft `#D6C1A0` (superficies), marrón `#634330` (texto secundario, AA sobre crema y kraft), cereza `#9A2E22` (único acento: solo descuentos y urgencia de stock).
 - Tipografía: una sola familia, **Archivo** (variable en ancho), con `next/font`. Títulos anchos y pesados como un sello; texto a 17 px; números de ancho fijo para datos y precios.
 - Evitar los "tics" de página generada: etiquetas en MAYÚSCULAS sobre cada título, textos unidos con "·", flechas "→" decorativas, numeración 01/02/03 si el contenido no es una secuencia.
-- Un solo momento memorable: la animación de la portada al scrollear (grano → molinillo → portafiltro → taza), hecha con SVG y respetando "reducir movimiento". El resto, sobrio.
+- Un solo momento memorable: la animación de la portada al scrollear (grano → molinillo → portafiltro → taza), hoy hecha con SVG (`ProcesoScroll.js`) y respetando "reducir movimiento"; se reemplazará por el video del proceso (ver Pendientes). El resto, sobrio.
 
 ### Incentivos de conversión
 Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
@@ -129,7 +134,7 @@ Mientras no estén, el sitio usa reemplazos provisorios (bloque beige con un gra
 - [ ] **Logo horizontal** (ícono + "Origen Café"): SVG o PNG transparente, `public/logo.svg`. Reemplaza el texto del `Header`.
 - [ ] **Ícono cuadrado** para la pestaña del navegador: PNG 512×512, `app/icon.png` (reemplaza `app/favicon.ico`).
 - [ ] **4 fotos de accesorios** (mismas reglas que las de café), en `public/accesorios/` con el slug como nombre.
-- [ ] **Video del proceso** (opcional, reemplaza la animación SVG de la portada): grano → molinillo → portafiltro → taza, vertical u horizontal, sin audio, MP4 corto (< 8 MB).
+- [ ] **Video del proceso** (reemplaza la animación SVG de la portada): 6–9 s, grano → molinillo → portafiltro → vaso de doble vidrio, fondo marrón oscuro, sujeto centrado, primer y último segundo quietos, 1920×1080 (y 9:16 si se puede), sin audio. Guardarlo en `public/video/proceso.mp4` (sin commitear). Se convierte con `ffmpeg` en una secuencia de ~180 imágenes WebP que un `<canvas>` dibuja según el scroll (técnica tipo Apple), en un PR `feat/video-scroll`.
 - [ ] **Videos de clientes** extrayendo café (2 o 3, verticales, MP4 cortos) para la página de producto. Hasta tenerlos se muestran espacios reservados.
 
 ## Próxima tarea (después del rediseño)
