@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import ImagenCafe from "./ImagenCafe";
+import ImagenProducto from "./ImagenProducto";
 import { MOLIENDAS, obtenerPerfil, precioDesde } from "@/lib/cafes";
 import { MAX_PREFERENCIAS, PREFERENCIAS, recomendar, validarPreferencias } from "@/lib/recomendacion";
 import { formatearPrecio } from "@/lib/tienda";
@@ -139,7 +139,7 @@ function Resultados({ resultados }) {
           >
             <div className="p-3 pb-0">
               <div className="overflow-hidden rounded-2xl">
-                <ImagenCafe cafe={cafe} sizes="(min-width: 1024px) 33vw, 100vw" aspecto="aspect-[16/9]" />
+                <ImagenProducto producto={cafe} sizes="(min-width: 1024px) 33vw, 100vw" aspecto="aspect-[16/9]" />
               </div>
             </div>
             <div className="flex flex-1 flex-col p-6">

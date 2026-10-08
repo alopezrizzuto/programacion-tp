@@ -44,7 +44,6 @@
   &:disabled {
     cursor: not-allowed;
     opacity: 0.55;
-    background: var(--color-tostado);
   }
 }
 

@@ -22,7 +22,7 @@ const GARANTIAS = [
 export default function Garantias({ compacta = false }) {
   return (
     <section aria-label="Garantías" className={compacta ? "" : "border-t border-marron/15"}>
-      <ul className={`mx-auto grid max-w-7xl gap-8 ${compacta ? "" : "px-4 py-14 sm:px-6"} md:grid-cols-3`}>
+      <ul className={`mx-auto grid max-w-7xl ${compacta ? "gap-5" : "gap-8 px-4 py-14 sm:px-6 md:grid-cols-3"}`}>
         {GARANTIAS.map((garantia) => (
           <li key={garantia.titulo} className="flex gap-4">
             <svg
