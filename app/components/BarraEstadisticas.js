@@ -1,10 +1,14 @@
 import { PRUEBA_SOCIAL } from "@/lib/tienda";
-import { promedioResenas } from "@/lib/cafes";
+import { promedioResenas } from "@/lib/productos";
 
 // Números de confianza (de ejemplo: el footer aclara que es una tienda de demostración)
 export default function BarraEstadisticas({ producto }) {
+  const promedio = promedioResenas(producto);
   const datos = [
-    [promedioResenas(producto).toLocaleString("es-AR", { maximumFractionDigits: 1 }) + " de 5", "en reseñas de clientes"],
+    // Sin reseñas todavía, se muestra el despacho en lugar del promedio
+    promedio > 0
+      ? [promedio.toLocaleString("es-AR", { maximumFractionDigits: 1 }) + " de 5", "en reseñas de clientes"]
+      : ["Hoy", "despachamos si comprás antes de las 14"],
     [PRUEBA_SOCIAL.clientes, "personas ya compraron en Origen"],
     [PRUEBA_SOCIAL.recompra, "vuelve a comprar el mismo café"],
     [PRUEBA_SOCIAL.despacho, "para despachar tu pedido"],

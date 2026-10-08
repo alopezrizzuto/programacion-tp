@@ -1,8 +1,8 @@
 import TarjetaCafe from "../components/TarjetaCafe";
 import TarjetaAccesorio from "../components/TarjetaAccesorio";
 import Escala from "../components/Escala";
-import { PERFILES, obtenerCafes } from "@/lib/cafes";
-import { obtenerAccesorios } from "@/lib/accesorios";
+import { PERFILES } from "@/lib/productos";
+import { obtenerAccesorios, obtenerCafes } from "@/lib/datos";
 import { BUNDLES, PROMOS } from "@/lib/tienda";
 
 export const metadata = {
@@ -17,9 +17,9 @@ const CARACTER_PERFIL = {
   intenso: { acidez: 1, cuerpo: 5 },
 };
 
-export default function ProductosPage() {
-  const cafes = obtenerCafes();
-  const accesorios = obtenerAccesorios();
+export default async function ProductosPage() {
+  const cafes = await obtenerCafes();
+  const accesorios = await obtenerAccesorios();
   const [, dos, tres] = BUNDLES;
 
   return (

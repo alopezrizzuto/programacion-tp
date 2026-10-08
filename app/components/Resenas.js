@@ -1,5 +1,5 @@
 import Estrellas from "./Estrellas";
-import { promedioResenas } from "@/lib/cafes";
+import { promedioResenas } from "@/lib/productos";
 
 // Reseñas de un producto: promedio, cuántas hay de cada puntaje y la lista.
 export default function Resenas({ producto }) {
@@ -9,6 +9,17 @@ export default function Resenas({ producto }) {
     puntaje,
     cantidad: producto.resenas.filter((resena) => resena.puntaje === puntaje).length,
   }));
+
+  if (total === 0) {
+    return (
+      <section id="resenas" aria-labelledby="titulo-resenas" className="scroll-mt-24">
+        <h2 id="titulo-resenas" className="font-display text-4xl leading-none sm:text-5xl">
+          Reseñas
+        </h2>
+        <p className="mt-6 text-lg text-marron">Todavía no hay reseñas de este producto.</p>
+      </section>
+    );
+  }
 
   return (
     <section id="resenas" aria-labelledby="titulo-resenas" className="scroll-mt-24">

@@ -3,6 +3,7 @@ import BarraPromos from "./components/BarraPromos";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { ProveedorCarrito } from "./components/carrito/ProveedorCarrito";
+import { obtenerProductos } from "@/lib/datos";
 import "./globals.css";
 
 // Archivo es una fuente variable: el eje "wdth" permite ensancharla para los títulos
@@ -21,7 +22,14 @@ export const metadata = {
     "Cafés de especialidad de Etiopía, Kenia, Colombia, Guatemala y Brasil, tostados cada semana. Elegí el peso y la molienda para tu método.",
 };
 
-export default function RootLayout({ children }) {
+// Red de seguridad: las páginas se regeneran como mucho cada 5 minutos con los datos de Supabase.
+// Cuando el admin edita un producto se regeneran al instante (revalidatePath, PR del admin).
+export const revalidate = 300;
+
+export default async function RootLayout({ children }) {
+  // El catálogo se le pasa al carrito para calcular precios y stock en el navegador
+  const productos = await obtenerProductos();
+
   return (
     <html lang="es" className={`${archivo.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans text-base">
@@ -32,7 +40,7 @@ export default function RootLayout({ children }) {
           Saltar al contenido
         </a>
         {/* El proveedor comparte el carrito con toda la tienda (header, botones, panel) */}
-        <ProveedorCarrito>
+        <ProveedorCarrito productos={productos}>
           <BarraPromos />
           <Header />
           <main id="contenido" className="flex-1">

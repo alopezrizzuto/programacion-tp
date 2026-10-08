@@ -4,21 +4,22 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import ImagenProducto from "./ImagenProducto";
 import { useCarrito } from "./carrito/ProveedorCarrito";
-import { MOLIENDAS, nombrePeso, obtenerPerfil } from "@/lib/cafes";
+import { MOLIENDAS, nombrePeso, obtenerPerfil } from "@/lib/productos";
 import { PREGUNTAS, recomendar, validarRespuestas } from "@/lib/recomendacion";
 import { formatearPrecio } from "@/lib/tienda";
 
 // Client Component: guarda las respuestas (un objeto como { intensidad: "fuerte", ... }) y si ya confirmó.
 // Los resultados no se guardan: se calculan a partir de las respuestas, así
 // cambian solos si el usuario toca otra opción después de confirmar.
-export default function TestCafe() {
+// "cafes" llega desde la página (Supabase) y es la lista entre la que se recomienda.
+export default function TestCafe({ cafes }) {
   const [respuestas, setRespuestas] = useState({});
   const [confirmado, setConfirmado] = useState(false);
   const [error, setError] = useState(null);
   const resultadosRef = useRef(null);
 
   const respondidas = PREGUNTAS.filter((pregunta) => respuestas[pregunta.id]).length;
-  const resultados = confirmado && !validarRespuestas(respuestas) ? recomendar(respuestas) : null;
+  const resultados = confirmado && !validarRespuestas(respuestas) ? recomendar(respuestas, cafes) : null;
 
   function responder(preguntaId, opcionId) {
     setError(null);

@@ -12,18 +12,19 @@ import Resenas from "../../components/Resenas";
 import BarraEstadisticas from "../../components/BarraEstadisticas";
 import PreguntasFrecuentes from "../../components/PreguntasFrecuentes";
 import SelectorCompra from "./SelectorCompra";
-import { nombrePeso, obtenerCafePorSlug, obtenerCafes, obtenerPerfil, promedioResenas } from "@/lib/cafes";
-import { obtenerAccesorios } from "@/lib/accesorios";
+import { nombrePeso, obtenerPerfil, promedioResenas } from "@/lib/productos";
+import { obtenerAccesorios, obtenerCafes, obtenerProductoPorSlug } from "@/lib/datos";
 import { FAQ_CAFE } from "@/lib/preguntas-frecuentes";
 
-// Le dice a Next qué slugs existen, para generar las 6 páginas al compilar
-export function generateStaticParams() {
-  return obtenerCafes().map((cafe) => ({ slug: cafe.slug }));
+// Le dice a Next qué slugs existen, para generar las páginas al compilar.
+// Un café que el admin agregue después se genera la primera vez que alguien lo visita.
+export async function generateStaticParams() {
+  return (await obtenerCafes()).map((cafe) => ({ slug: cafe.slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const cafe = obtenerCafePorSlug(slug);
+  const cafe = await obtenerProductoPorSlug("cafe", slug);
   if (!cafe) return { title: "Café no encontrado" };
   return { title: cafe.nombre, description: cafe.descripcion };
 }
@@ -31,15 +32,15 @@ export async function generateMetadata({ params }) {
 export default async function CafePage({ params }) {
   // En Next 16 los params llegan como promesa: hay que esperarlos con await
   const { slug } = await params;
-  const cafe = obtenerCafePorSlug(slug);
+  const cafe = await obtenerProductoPorSlug("cafe", slug);
   if (!cafe) notFound();
 
   const perfil = obtenerPerfil(cafe.perfil);
   const promedio = promedioResenas(cafe);
-  const cafes = obtenerCafes();
+  const cafes = await obtenerCafes();
   // Para completar el pedido: el otro café del mismo perfil y dos accesorios
   const otroDelPerfil = cafes.find((otro) => otro.perfil === cafe.perfil && otro.id !== cafe.id);
-  const accesorios = obtenerAccesorios().filter((a) => ["contenedor-al-vacio", "balanza-con-timer"].includes(a.slug));
+  const accesorios = (await obtenerAccesorios()).filter((a) => ["contenedor-al-vacio", "balanza-con-timer"].includes(a.slug));
 
   const beneficios = [
     `notas a ${cafe.notas.join(", ")}`,
@@ -82,10 +83,12 @@ export default async function CafePage({ params }) {
             {perfil.nombre}, de {cafe.origen}
           </p>
           <h1 className="mt-1 font-display text-5xl leading-[0.95] sm:text-6xl">{cafe.nombre}</h1>
-          <a href="#resenas" className="mt-4 inline-flex items-center gap-2 hover:underline">
-            <Estrellas puntaje={promedio} />
-            {promedio.toLocaleString("es-AR", { maximumFractionDigits: 1 })} ({cafe.resenas.length} reseñas)
-          </a>
+          {cafe.resenas.length > 0 && (
+            <a href="#resenas" className="mt-4 inline-flex items-center gap-2 hover:underline">
+              <Estrellas puntaje={promedio} />
+              {promedio.toLocaleString("es-AR", { maximumFractionDigits: 1 })} ({cafe.resenas.length} reseñas)
+            </a>
+          )}
           <p className="mt-5 text-lg text-marron">{cafe.descripcion}</p>
 
           <SelectorCompra cafe={cafe} beneficios={beneficios} promedio={promedio} />

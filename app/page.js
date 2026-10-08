@@ -4,7 +4,8 @@ import TestCafe from "./components/TestCafe";
 import Estrellas from "./components/Estrellas";
 import Garantias from "./components/Garantias";
 import { ESTILO_PERFIL } from "./components/estilos";
-import { PERFILES, obtenerCafes, precioDesde } from "@/lib/cafes";
+import { PERFILES, precioDesde } from "@/lib/productos";
+import { obtenerCafes } from "@/lib/datos";
 import { PRUEBA_SOCIAL, formatearPrecio } from "@/lib/tienda";
 
 const COMPARACION = [
@@ -14,8 +15,8 @@ const COMPARACION = [
   ["Calidad", "Café comercial", "Café de especialidad, más de 84 puntos"],
 ];
 
-export default function Home() {
-  const cafes = obtenerCafes();
+export default async function Home() {
+  const cafes = await obtenerCafes();
   const resenas = cafes.flatMap((cafe) => cafe.resenas.map((resena) => ({ ...resena, cafe })));
   const promedio = resenas.reduce((suma, r) => suma + r.puntaje, 0) / resenas.length;
   const destacadas = resenas.filter((r) => r.puntaje === 5).slice(0, 6);
@@ -23,7 +24,7 @@ export default function Home() {
   return (
     <>
       <ProcesoScroll />
-      <TestCafe />
+      <TestCafe cafes={cafes} />
 
       {/* Perfiles con sus cafés */}
       <section aria-labelledby="titulo-perfiles" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">

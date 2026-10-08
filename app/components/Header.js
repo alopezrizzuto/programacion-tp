@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PERFILES } from "@/lib/cafes";
+import { PERFILES } from "@/lib/productos";
 import IconoGrano from "./IconoGrano";
 import IconoBolsa from "./IconoBolsa";
 import { useCarrito } from "./carrito/ProveedorCarrito";

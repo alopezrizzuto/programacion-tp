@@ -3,7 +3,7 @@ import ImagenProducto from "./ImagenProducto";
 import Estrellas from "./Estrellas";
 import Escala from "./Escala";
 import { ESTILO_PERFIL } from "./estilos";
-import { precioDesde, promedioResenas, tieneStock } from "@/lib/cafes";
+import { precioDesde, promedioResenas, tieneStock } from "@/lib/productos";
 import { formatearPrecio, precioTransferencia } from "@/lib/tienda";
 
 // Tarjeta de café pensada como la etiqueta de la bolsa: origen, nombre, notas y una mini ficha.
@@ -56,10 +56,12 @@ export default function TarjetaCafe({ cafe, horizontal = false }) {
             </p>
             <p className="opacity-80">{formatearPrecio(precioTransferencia(desde))} con transferencia</p>
           </div>
-          <p className="flex items-center gap-1.5 text-sm">
-            <Estrellas puntaje={promedioResenas(cafe)} className="h-3.5 w-3.5" />
-            <span>({cafe.resenas.length})</span>
-          </p>
+          {cafe.resenas.length > 0 && (
+            <p className="flex items-center gap-1.5 text-sm">
+              <Estrellas puntaje={promedioResenas(cafe)} className="h-3.5 w-3.5" />
+              <span>({cafe.resenas.length})</span>
+            </p>
+          )}
         </div>
       </div>
     </article>
