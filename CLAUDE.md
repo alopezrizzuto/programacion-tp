@@ -132,7 +132,7 @@ Se valora el **desarrollo continuo**: commits frecuentes y entregas alineadas al
 
 ## Pendientes de Agustín (no dar por hechos)
 Mientras no estén, el sitio usa reemplazos provisorios (bloque beige con un grano dibujado y el nombre en texto como logo).
-- [ ] **6 fotos de producto** (una por café, la bolsa; no hace falta una por peso). Cuadradas 1200×1200 px, JPG o WebP, mismo fondo crema/beige, misma luz y ángulo. En `public/cafes/` con el slug como nombre: `etiopia-yirgacheffe.jpg`, `kenia-aa.jpg`, `colombia-huila.jpg`, `guatemala-antigua.jpg`, `brasil-cerrado.jpg`, `blend-espresso.jpg`. Al tenerlas: completar `imagen` de cada café en `lib/cafes.js`.
+- [ ] **6 fotos de producto** (una por café, la bolsa; no hace falta una por peso). Cuadradas 1200×1200 px, JPG o WebP, mismo fondo crema/beige, misma luz y ángulo. En `public/cafes/` con el slug como nombre: `etiopia-yirgacheffe.jpg`, `kenia-aa.jpg`, `colombia-huila.jpg`, `guatemala-antigua.jpg`, `brasil-cerrado.jpg`, `blend-espresso.jpg`. Al tenerlas: cargarlas desde el panel admin (o completar `imagen_url` en la tabla `productos`).
 - [ ] **Foto principal de la portada** (opcional): horizontal 1920×1080 px, `public/hero.jpg`.
 - [ ] **Logo horizontal** (ícono + "Origen Café"): SVG o PNG transparente, `public/logo.svg`. Reemplaza el texto del `Header`.
 - [ ] **Ícono cuadrado** para la pestaña del navegador: PNG 512×512, `app/icon.png` (reemplaza `app/favicon.ico`).
@@ -140,12 +140,12 @@ Mientras no estén, el sitio usa reemplazos provisorios (bloque beige con un gra
 - [ ] **Video del proceso** (reemplaza la animación SVG de la portada): 6–9 s, grano → molinillo → portafiltro → vaso de doble vidrio, fondo marrón oscuro, sujeto centrado, primer y último segundo quietos, 1920×1080 (y 9:16 si se puede), sin audio. Guardarlo en `public/video/proceso.mp4` (sin commitear). Se convierte con `ffmpeg` en una secuencia de ~180 imágenes WebP que un `<canvas>` dibuja según el scroll (técnica tipo Apple), en un PR `feat/video-scroll`.
 - [ ] **Videos de clientes** extrayendo café (2 o 3, verticales, MP4 cortos) para la página de producto. Hasta tenerlos se muestran espacios reservados.
 
-## Próxima tarea (después del rediseño)
-**Supabase + autenticación + panel admin** (E5 adelantado, y cubre parte de E3):
-1. Proyecto en Supabase, variables en `.env.local` y en Vercel.
-2. Migraciones en `supabase/migrations/` con el modelo de datos de arriba (incluye `categoria` y accesorios), `CHECK`s y RLS.
-3. `supabase/seed.sql` con los 6 cafés × 3 pesos y los 4 accesorios (los datos de `lib/cafes.js` y `lib/accesorios.js`).
-4. Las páginas leen de Supabase en lugar de los archivos de ejemplo.
+## Tarea en curso: Supabase + autenticación + admin
+Se hace en 3 PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (paso 5), C `feat/admin` (paso 6, con subida de fotos a Supabase Storage). Después, D: Mercado Pago (E6).
+1. ✅ Proyecto en Supabase, variables en `.env.local`, Vercel y GitHub (Variables de Actions, para el build de CI).
+2. ✅ Migraciones en `supabase/migrations/` con el modelo de datos de arriba (incluye `categoria` y accesorios), `CHECK`s y RLS.
+3. ✅ `supabase/seed.sql` con los 6 cafés × 3 pesos, los 4 accesorios y las reseñas (ids fijos).
+4. ✅ Las páginas leen de Supabase (`lib/datos.js`) y se regeneran cada 5 minutos (`revalidate = 300`).
 5. Registro y login con Supabase Auth (validación en el formulario + fetch), `profiles` con `role`.
 6. Panel `/admin` (solo `role = admin`): CRUD de productos (cafés y accesorios), variantes y stock, para manejar la tienda sin tocar código.
 
