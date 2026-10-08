@@ -8,29 +8,30 @@ const COLOR_POR_PERFIL = {
   intenso: "text-tostado",
 };
 
-// Íconos provisorios de los accesorios, dibujados con líneas
+// Íconos provisorios de los accesorios (según su slug), dibujados con líneas.
+// Un accesorio nuevo cargado desde el admin usa el del contenedor como genérico.
 const ICONOS_ACCESORIO = {
-  vaso: (
+  "vasos-doble-vidrio": (
     <>
       <path d="M14 10h36l-4 44a6 6 0 0 1-6 5H24a6 6 0 0 1-6-5z" />
       <path d="M19 15h26l-3.5 37a3 3 0 0 1-3 2.6H25.5a3 3 0 0 1-3-2.6z" opacity="0.5" />
     </>
   ),
-  contenedor: (
+  "contenedor-al-vacio": (
     <>
       <rect x="16" y="18" width="32" height="40" rx="5" />
       <rect x="13" y="10" width="38" height="9" rx="3" />
       <circle cx="32" cy="14.5" r="2" />
     </>
   ),
-  tamper: (
+  "tamping-set": (
     <>
       <path d="M26 8h12v22a6 6 0 0 1-12 0z" />
       <path d="M16 36h32v6H16z" />
       <path d="M20 42h24v6a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4z" />
     </>
   ),
-  balanza: (
+  "balanza-con-timer": (
     <>
       <rect x="8" y="30" width="48" height="22" rx="5" />
       <path d="M14 30v-4h36v4" />
@@ -74,7 +75,7 @@ export default function ImagenProducto({ producto, sizes, priority = false, aspe
               strokeWidth="2.5"
               strokeLinejoin="round"
             >
-              {ICONOS_ACCESORIO[producto.icono]}
+              {ICONOS_ACCESORIO[producto.slug] ?? ICONOS_ACCESORIO["contenedor-al-vacio"]}
             </svg>
           )}
           {!miniatura && (

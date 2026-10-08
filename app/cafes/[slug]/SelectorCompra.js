@@ -4,7 +4,7 @@ import { useState } from "react";
 import Estrellas from "../../components/Estrellas";
 import BarraEnvioGratis from "../../components/BarraEnvioGratis";
 import { useCarrito } from "../../components/carrito/ProveedorCarrito";
-import { MOLIENDAS, nombrePeso } from "@/lib/cafes";
+import { MOLIENDAS, nombrePeso } from "@/lib/productos";
 import {
   BUNDLES,
   PROMOS,
@@ -108,7 +108,7 @@ export default function SelectorCompra({ cafe, beneficios, promedio }) {
       </ul>
 
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-kraft/45 px-4 py-3">
-        <Estrellas puntaje={promedio} />
+        {promedio > 0 && <Estrellas puntaje={promedio} />}
         <span>
           <strong className="font-semibold">{PRUEBA_SOCIAL.clientes} personas</strong> ya eligieron Origen Café
         </span>

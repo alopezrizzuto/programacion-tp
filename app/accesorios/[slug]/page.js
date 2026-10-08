@@ -9,31 +9,31 @@ import Garantias from "../../components/Garantias";
 import Resenas from "../../components/Resenas";
 import PreguntasFrecuentes from "../../components/PreguntasFrecuentes";
 import SelectorAccesorio from "./SelectorAccesorio";
-import { obtenerCafes, promedioResenas } from "@/lib/cafes";
-import { obtenerAccesorioPorSlug, obtenerAccesorios } from "@/lib/accesorios";
+import { promedioResenas } from "@/lib/productos";
+import { obtenerAccesorios, obtenerCafes, obtenerProductoPorSlug } from "@/lib/datos";
 import { FAQ_ACCESORIO } from "@/lib/preguntas-frecuentes";
 
 // Misma lógica que la página de café: Next genera una página por accesorio al compilar
-export function generateStaticParams() {
-  return obtenerAccesorios().map((accesorio) => ({ slug: accesorio.slug }));
+export async function generateStaticParams() {
+  return (await obtenerAccesorios()).map((accesorio) => ({ slug: accesorio.slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const accesorio = obtenerAccesorioPorSlug(slug);
+  const accesorio = await obtenerProductoPorSlug("accesorio", slug);
   if (!accesorio) return { title: "Accesorio no encontrado" };
-  return { title: accesorio.nombre, description: accesorio.corta };
+  return { title: accesorio.nombre, description: accesorio.descripcion_corta };
 }
 
 export default async function AccesorioPage({ params }) {
   const { slug } = await params;
-  const accesorio = obtenerAccesorioPorSlug(slug);
+  const accesorio = await obtenerProductoPorSlug("accesorio", slug);
   if (!accesorio) notFound();
 
   const promedio = promedioResenas(accesorio);
-  const otrosAccesorios = obtenerAccesorios().filter((otro) => otro.id !== accesorio.id).slice(0, 2);
+  const otrosAccesorios = (await obtenerAccesorios()).filter((otro) => otro.id !== accesorio.id).slice(0, 2);
   // El café mejor valorado, para sugerirlo junto al accesorio
-  const cafeSugerido = [...obtenerCafes()].sort((a, b) => promedioResenas(b) - promedioResenas(a))[0];
+  const cafeSugerido = [...(await obtenerCafes())].sort((a, b) => promedioResenas(b) - promedioResenas(a))[0];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -56,10 +56,12 @@ export default async function AccesorioPage({ params }) {
         <div>
           <p className="text-marron">Accesorio</p>
           <h1 className="mt-1 font-display text-5xl leading-[0.95] sm:text-6xl">{accesorio.nombre}</h1>
-          <a href="#resenas" className="mt-4 inline-flex items-center gap-2 hover:underline">
-            <Estrellas puntaje={promedio} />
-            {promedio.toLocaleString("es-AR", { maximumFractionDigits: 1 })} ({accesorio.resenas.length} reseñas)
-          </a>
+          {accesorio.resenas.length > 0 && (
+            <a href="#resenas" className="mt-4 inline-flex items-center gap-2 hover:underline">
+              <Estrellas puntaje={promedio} />
+              {promedio.toLocaleString("es-AR", { maximumFractionDigits: 1 })} ({accesorio.resenas.length} reseñas)
+            </a>
+          )}
           <p className="mt-5 text-lg text-marron">{accesorio.descripcion}</p>
 
           <ul className="mt-6 space-y-2">

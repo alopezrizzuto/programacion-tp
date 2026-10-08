@@ -3,7 +3,7 @@
 import Link from "next/link";
 import ImagenProducto from "../ImagenProducto";
 import { useCarrito } from "./ProveedorCarrito";
-import { MOLIENDAS, nombrePeso } from "@/lib/cafes";
+import { MOLIENDAS, nombrePeso } from "@/lib/productos";
 import { BUNDLES, formatearPrecio } from "@/lib/tienda";
 
 // Una línea del carrito: producto, detalle, cantidad, precio y la sugerencia de bundle.

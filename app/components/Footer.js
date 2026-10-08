@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PERFILES } from "@/lib/cafes";
+import { PERFILES } from "@/lib/productos";
 import { ENVIOS, PROMOS, formatearPrecio } from "@/lib/tienda";
 
 export default function Footer() {

@@ -3,16 +3,17 @@
 import { useState } from "react";
 import ImagenProducto from "../ImagenProducto";
 import { useCarrito } from "./ProveedorCarrito";
-import { obtenerAccesorios } from "@/lib/accesorios";
 import { formatearPrecio } from "@/lib/tienda";
 
 // Sugerencias de accesorios dentro del carrito. Va en el flujo normal de la lista
 // (no flota encima), así nunca tapa los productos, y se puede minimizar.
 export default function UpsellAccesorios() {
-  const { lineas, sumar } = useCarrito();
+  const { lineas, sumar, productos } = useCarrito();
   const [desplegado, setDesplegado] = useState(true);
   const enCarrito = lineas.map((linea) => linea.producto.id);
-  const sugeridos = obtenerAccesorios().filter((a) => !enCarrito.includes(a.id) && a.variantes[0].stock > 0);
+  const sugeridos = productos.filter(
+    (p) => p.categoria === "accesorio" && !enCarrito.includes(p.id) && p.variantes[0].stock > 0
+  );
 
   if (sugeridos.length === 0) return null;
 

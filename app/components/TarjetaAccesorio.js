@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ImagenProducto from "./ImagenProducto";
 import Estrellas from "./Estrellas";
-import { precioDesde, promedioResenas } from "@/lib/cafes";
+import { precioDesde, promedioResenas } from "@/lib/productos";
 import { formatearPrecio, precioTransferencia } from "@/lib/tienda";
 
 export default function TarjetaAccesorio({ accesorio }) {
@@ -18,16 +18,18 @@ export default function TarjetaAccesorio({ accesorio }) {
             {accesorio.nombre}
           </Link>
         </h3>
-        <p className="mt-2 text-marron">{accesorio.corta}</p>
+        <p className="mt-2 text-marron">{accesorio.descripcion_corta}</p>
         <div className="mt-auto flex items-end justify-between gap-4 pt-5">
           <div>
             <p className="text-lg font-semibold">{formatearPrecio(precio)}</p>
             <p className="text-marron">{formatearPrecio(precioTransferencia(precio))} con transferencia</p>
           </div>
-          <p className="flex items-center gap-1.5 text-sm">
-            <Estrellas puntaje={promedioResenas(accesorio)} className="h-3.5 w-3.5" />
-            <span>({accesorio.resenas.length})</span>
-          </p>
+          {accesorio.resenas.length > 0 && (
+            <p className="flex items-center gap-1.5 text-sm">
+              <Estrellas puntaje={promedioResenas(accesorio)} className="h-3.5 w-3.5" />
+              <span>({accesorio.resenas.length})</span>
+            </p>
+          )}
         </div>
       </div>
     </article>
