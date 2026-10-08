@@ -3,15 +3,9 @@ import ProcesoScroll from "./components/ProcesoScroll";
 import TestCafe from "./components/TestCafe";
 import Estrellas from "./components/Estrellas";
 import Garantias from "./components/Garantias";
+import { ESTILO_PERFIL } from "./components/estilos";
 import { PERFILES, obtenerCafes, precioDesde } from "@/lib/cafes";
 import { PRUEBA_SOCIAL, formatearPrecio } from "@/lib/tienda";
-
-// Cada perfil tiene su propio "sello" de color para diferenciarse a simple vista
-const ESTILO_PERFIL = {
-  frutal: "bg-kraft text-tostado",
-  equilibrado: "bg-crema text-tostado ring-1 ring-inset ring-marron/25",
-  intenso: "bg-tostado text-crema",
-};
 
 const COMPARACION = [
   ["Fecha de tostado", "No figura, puede tener meses", "Menos de 7 días, impresa en la bolsa"],
