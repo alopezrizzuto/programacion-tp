@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import BarraEnvioGratis from "../../components/BarraEnvioGratis";
+import { useCarrito } from "../../components/carrito/ProveedorCarrito";
 import { PROMOS, STOCK_BAJO, formatearPrecio, precioTransferencia, valorCuota } from "@/lib/tienda";
 
 // Versión simple de la columna de compra: los accesorios tienen una sola variante,
@@ -12,12 +13,19 @@ export default function SelectorAccesorio({ accesorio }) {
   const [cantidad, setCantidad] = useState(1);
   const total = variante.precio * cantidad;
 
+  const { agregar } = useCarrito();
+
+  function agregarAlCarrito(evento) {
+    evento.preventDefault();
+    agregar({ varianteId: variante.id, cantidad });
+  }
+
   function cambiarCantidad(nueva) {
     setCantidad(Math.max(1, Math.min(nueva, variante.stock)));
   }
 
   return (
-    <form className="mt-8 space-y-8" onSubmit={(evento) => evento.preventDefault()}>
+    <form className="mt-8 space-y-8" onSubmit={agregarAlCarrito}>
       <p className={`flex items-center gap-2 font-semibold ${hayStock && variante.stock <= STOCK_BAJO ? "text-cereza" : ""}`}>
         <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-current" />
         {!hayStock
@@ -69,8 +77,7 @@ export default function SelectorAccesorio({ accesorio }) {
               +
             </button>
           </div>
-          {/* El carrito se conecta en el próximo PR */}
-          <button type="submit" disabled className="boton flex-1 bg-crema text-tostado hover:bg-kraft">
+          <button type="submit" disabled={!hayStock} className="boton flex-1 bg-crema text-tostado hover:bg-kraft">
             Agregar al carrito
           </button>
         </div>

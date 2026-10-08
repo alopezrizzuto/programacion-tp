@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Estrellas from "../../components/Estrellas";
 import BarraEnvioGratis from "../../components/BarraEnvioGratis";
+import { useCarrito } from "../../components/carrito/ProveedorCarrito";
 import { MOLIENDAS, nombrePeso } from "@/lib/cafes";
 import {
   BUNDLES,
@@ -35,6 +36,14 @@ export default function SelectorCompra({ cafe, beneficios, promedio }) {
     setCantidad(Math.max(1, Math.min(nueva, variante.stock)));
   }
 
+  const { agregar } = useCarrito();
+
+  // Se guarda solo qué variante, qué molienda y cuántas: el precio se recalcula siempre desde los datos
+  function agregarAlCarrito(evento) {
+    evento.preventDefault();
+    agregar({ varianteId: variante.id, molienda, cantidad });
+  }
+
   function cambiarVariante(id) {
     const nueva = cafe.variantes.find((v) => v.id === id);
     setVarianteId(id);
@@ -42,7 +51,7 @@ export default function SelectorCompra({ cafe, beneficios, promedio }) {
   }
 
   return (
-    <form className="mt-8 space-y-8" onSubmit={(evento) => evento.preventDefault()}>
+    <form className="mt-8 space-y-8" onSubmit={agregarAlCarrito}>
       <fieldset>
         <legend className="font-semibold">Peso de la bolsa</legend>
         <div className="mt-3 grid grid-cols-3 gap-3">
@@ -207,8 +216,7 @@ export default function SelectorCompra({ cafe, beneficios, promedio }) {
               +
             </button>
           </div>
-          {/* El carrito se conecta en el próximo PR */}
-          <button type="submit" disabled className="boton flex-1 bg-crema text-tostado hover:bg-kraft">
+          <button type="submit" disabled={!hayStock} className="boton flex-1 bg-crema text-tostado hover:bg-kraft">
             Agregar al carrito
           </button>
         </div>

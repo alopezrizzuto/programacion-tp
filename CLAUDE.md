@@ -73,6 +73,9 @@ Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
 
 ### Decisiones de simplificación (ya acordadas)
 - El **carrito vive en el cliente** (estado de React + `localStorage`). Recién se persiste al crear la orden. Se abre como panel lateral (con upsell de accesorios minimizable) y también existe la página `/carrito`.
+  - En `localStorage` (clave `origen-cafe-carrito`) se guarda solo `{ varianteId, molienda, cantidad }` por línea: **nunca precios**. `lib/carrito-almacen.js` lo lee/escribe y avisa los cambios (React lo lee con `useSyncExternalStore`, también entre pestañas).
+  - `lib/carrito.js` (`calcularCarrito`) calcula totales, bundles (por café y peso, sumando moliendas) y transferencia. Es una función pura: en E6 el servidor la reutiliza para recalcular el total al crear la orden.
+  - `ProveedorCarrito` (Context) comparte el carrito con el header (bolsa con contador), los botones de agregar y el panel (`<dialog>` nativo).
 - **Sin** cálculo de costo de envío por zona ni cupones. El envío es gratis desde $100.000; debajo se muestra como "a calcular" (se define antes de E6).
 - Roles: `cliente` y `admin` (columna `role` en `profiles`).
 - Pago con **Checkout Pro** (redirección a Mercado Pago).

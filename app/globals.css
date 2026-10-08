@@ -67,6 +67,18 @@ body {
   color: var(--color-tostado);
 }
 
+/* Mientras el panel del carrito está abierto, la página de atrás no scrollea */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* El panel del carrito entra deslizándose desde la derecha */
+@keyframes entrar-panel {
+  from {
+    transform: translateX(100%);
+  }
+}
+
 :focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;

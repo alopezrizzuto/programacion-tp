@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import ImagenProducto from "./ImagenProducto";
-import { MOLIENDAS, obtenerPerfil, precioDesde } from "@/lib/cafes";
+import { useCarrito } from "./carrito/ProveedorCarrito";
+import { MOLIENDAS, nombrePeso, obtenerPerfil } from "@/lib/cafes";
 import { PREGUNTAS, recomendar, validarRespuestas } from "@/lib/recomendacion";
 import { formatearPrecio } from "@/lib/tienda";
 
@@ -124,55 +125,67 @@ export default function TestCafe() {
 }
 
 function Resultados({ resultados }) {
+  const { agregar } = useCarrito();
   return (
     <div className="mt-16">
       <h3 className="font-display text-3xl sm:text-4xl">Tus cafés recomendados</h3>
       <ol className="mt-8 grid gap-6 lg:grid-cols-3">
-        {resultados.map(({ cafe, coincidencia, motivos, molienda }, i) => (
-          <li
-            key={cafe.id}
-            className={`flex flex-col overflow-hidden rounded-3xl ${i === 0 ? "bg-tostado text-crema" : "bg-kraft/45"}`}
-          >
-            <div className="p-3 pb-0">
-              <div className="overflow-hidden rounded-2xl">
-                <ImagenProducto producto={cafe} sizes="(min-width: 1024px) 33vw, 100vw" aspecto="aspect-[16/9]" />
+        {resultados.map(({ cafe, coincidencia, motivos, molienda }, i) => {
+          // Se sugiere la bolsa más chica con stock, molida según el método elegido
+          const sugerida = cafe.variantes.find((v) => v.stock > 0);
+          return (
+            <li
+              key={cafe.id}
+              className={`flex flex-col overflow-hidden rounded-3xl ${i === 0 ? "bg-tostado text-crema" : "bg-kraft/45"}`}
+            >
+              <div className="p-3 pb-0">
+                <div className="overflow-hidden rounded-2xl">
+                  <ImagenProducto producto={cafe} sizes="(min-width: 1024px) 33vw, 100vw" aspecto="aspect-[16/9]" />
+                </div>
               </div>
-            </div>
-            <div className="flex flex-1 flex-col p-6">
-              <p className={i === 0 ? "text-kraft" : "text-marron"}>
-                {i === 0 ? "Tu mejor opción" : `Opción ${i + 1}`}: {coincidencia}% de coincidencia
-              </p>
-              <h4 className="mt-1 font-display text-3xl">{cafe.nombre}</h4>
-              <p className={`mt-1 ${i === 0 ? "text-kraft" : "text-marron"}`}>
-                {obtenerPerfil(cafe.perfil).nombre}, de {cafe.origen}
-              </p>
-              {motivos.length > 0 && (
-                <ul className="mt-4 list-disc space-y-1 pl-5">
-                  {motivos.map((motivo) => (
-                    <li key={motivo} className="first-letter:uppercase">
-                      {motivo}.
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="mt-4">
-                Molienda sugerida:{" "}
-                <strong className="font-semibold">{MOLIENDAS.find((m) => m.id === molienda).nombre.toLowerCase()}</strong>
-              </p>
-              <div className="mt-auto flex items-center justify-between gap-4 pt-6">
-                <p>
-                  Desde <strong className="font-semibold">{formatearPrecio(precioDesde(cafe))}</strong>
+              <div className="flex flex-1 flex-col p-6">
+                <p className={i === 0 ? "text-kraft" : "text-marron"}>
+                  {i === 0 ? "Tu mejor opción" : `Opción ${i + 1}`}: {coincidencia}% de coincidencia
                 </p>
-                <Link
-                  href={`/cafes/${cafe.slug}`}
-                  className={i === 0 ? "boton bg-crema text-tostado hover:bg-kraft" : "boton"}
-                >
-                  Ver este café
-                </Link>
+                <h4 className="mt-1 font-display text-3xl">{cafe.nombre}</h4>
+                <p className={`mt-1 ${i === 0 ? "text-kraft" : "text-marron"}`}>
+                  {obtenerPerfil(cafe.perfil).nombre}, de {cafe.origen}
+                </p>
+                {motivos.length > 0 && (
+                  <ul className="mt-4 list-disc space-y-1 pl-5">
+                    {motivos.map((motivo) => (
+                      <li key={motivo} className="first-letter:uppercase">
+                        {motivo}.
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-4">
+                  Molienda sugerida:{" "}
+                  <strong className="font-semibold">{MOLIENDAS.find((m) => m.id === molienda).nombre.toLowerCase()}</strong>
+                </p>
+                <div className="mt-auto pt-6">
+                  <p>
+                    Bolsa de {nombrePeso(sugerida.peso_gramos)}:{" "}
+                    <strong className="font-semibold">{formatearPrecio(sugerida.precio)}</strong>
+                  </p>
+                  <div className="mt-4 flex flex-wrap items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => agregar({ varianteId: sugerida.id, molienda })}
+                      className={i === 0 ? "boton bg-crema text-tostado hover:bg-kraft" : "boton"}
+                    >
+                      Agregar al carrito
+                    </button>
+                    <Link href={`/cafes/${cafe.slug}`} className="font-semibold underline underline-offset-4">
+                      Ver este café
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ol>
     </div>
   );
