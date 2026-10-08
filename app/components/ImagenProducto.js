@@ -41,7 +41,8 @@ const ICONOS_ACCESORIO = {
 
 // Muestra la foto del producto (café o accesorio). Mientras no haya foto
 // (imagen_url en null), muestra un reemplazo provisorio del mismo tamaño.
-export default function ImagenProducto({ producto, sizes, priority = false, aspecto = "aspect-square" }) {
+// "miniatura": en tamaños chicos (carrito) se oculta el texto del reemplazo provisorio
+export default function ImagenProducto({ producto, sizes, priority = false, aspecto = "aspect-square", miniatura = false }) {
   const esCafe = producto.categoria === "cafe";
 
   return (
@@ -62,12 +63,12 @@ export default function ImagenProducto({ producto, sizes, priority = false, aspe
           className="flex h-full flex-col items-center justify-center gap-3"
         >
           {esCafe ? (
-            <IconoGrano className={`h-1/4 w-1/4 ${COLOR_POR_PERFIL[producto.perfil]}`} />
+            <IconoGrano className={`${miniatura ? "h-1/2 w-1/2" : "h-1/4 w-1/4"} ${COLOR_POR_PERFIL[producto.perfil]}`} />
           ) : (
             <svg
               viewBox="0 0 64 64"
               aria-hidden="true"
-              className="h-1/4 w-1/4 text-tostado"
+              className={`${miniatura ? "h-1/2 w-1/2" : "h-1/4 w-1/4"} text-tostado`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"
@@ -76,7 +77,9 @@ export default function ImagenProducto({ producto, sizes, priority = false, aspe
               {ICONOS_ACCESORIO[producto.icono]}
             </svg>
           )}
-          <span className="font-display text-lg text-marron">{esCafe ? producto.origen : "Accesorio"}</span>
+          {!miniatura && (
+            <span className="font-display text-lg text-marron">{esCafe ? producto.origen : "Accesorio"}</span>
+          )}
         </div>
       )}
     </div>

@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation";
 import { PERFILES } from "@/lib/cafes";
 import IconoGrano from "./IconoGrano";
 import IconoBolsa from "./IconoBolsa";
+import { useCarrito } from "./carrito/ProveedorCarrito";
 
 // Client Component: el header guarda en estado qué menú está abierto
 // (el desplegable de Productos o el menú de celular) y lee la URL actual.
 export default function Header() {
   const pathname = usePathname();
+  const { unidades, abrir } = useCarrito();
   const [productosAbierto, setProductosAbierto] = useState(false);
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
 
@@ -93,14 +95,26 @@ export default function Header() {
           <Link href="/login" className={`hidden text-[15px] sm:block ${claseLink("/login")}`}>
             Ingresar
           </Link>
-          <Link
-            href="/carrito"
-            onClick={cerrarTodo}
-            aria-label="Carrito"
-            className="grid h-10 w-10 place-items-center rounded-full text-kraft transition-colors hover:text-crema"
+          {/* Bolsa con contador: abre el panel del carrito */}
+          <button
+            type="button"
+            onClick={() => {
+              cerrarTodo();
+              abrir();
+            }}
+            aria-label={`Abrir carrito, ${unidades} ${unidades === 1 ? "producto" : "productos"}`}
+            className="relative grid h-10 w-10 place-items-center rounded-full text-kraft transition-colors hover:text-crema"
           >
             <IconoBolsa className="h-6 w-6" />
-          </Link>
+            {unidades > 0 && (
+              <span
+                aria-hidden="true"
+                className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-crema px-1 text-xs font-bold text-tostado tabular-nums"
+              >
+                {unidades}
+              </span>
+            )}
+          </button>
           <button
             type="button"
             aria-expanded={menuMovilAbierto}
