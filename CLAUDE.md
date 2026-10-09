@@ -146,7 +146,7 @@ Se hace en 3 PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (
 2. ✅ Migraciones en `supabase/migrations/` con el modelo de datos de arriba (incluye `categoria` y accesorios), `CHECK`s y RLS.
 3. ✅ `supabase/seed.sql` con los 6 cafés × 3 pesos, los 4 accesorios y las reseñas (ids fijos).
 4. ✅ Las páginas leen de Supabase (`lib/datos.js`) y se regeneran cada 5 minutos (`revalidate = 300`).
-5. Registro y login con Supabase Auth (validación en el formulario + fetch), `profiles` con `role`.
+5. ✅ Registro e ingreso con Supabase Auth: formularios con validación compartida (`lib/auth.js`) + fetch a `/api/auth/*`, sesión en cookies renovada por `proxy.js`, menú de cuenta en el header y `/cuenta` (Mis pedidos).
 6. Panel `/admin` (solo `role = admin`): CRUD de productos (cafés y accesorios), variantes y stock, para manejar la tienda sin tocar código.
 
 ## Convenciones de trabajo
