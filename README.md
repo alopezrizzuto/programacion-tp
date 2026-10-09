@@ -41,6 +41,7 @@ En el **SQL Editor** de Supabase, ejecutar en orden el contenido de:
 1. `supabase/migrations/001_esquema.sql`: tablas, `CHECK`s, índices y el trigger que crea el perfil de cada usuario nuevo.
 2. `supabase/migrations/002_seguridad.sql`: función `es_admin()` y políticas RLS.
 3. `supabase/seed.sql`: los 6 cafés con sus 18 variantes, los 4 accesorios y las reseñas de ejemplo.
+4. `supabase/migrations/003_imagenes.sql`: bucket `productos` de Supabase Storage para las fotos (lectura pública, solo el admin sube o borra).
 
 ## Modelo de datos
 
@@ -67,21 +68,52 @@ Registro e ingreso con email y contraseña (Supabase Auth). El navegador nunca h
 
 Los errores vuelven como `{ errores: { campo: mensaje } }` (validación, 400) o `{ error: mensaje }` (credenciales u otros, 401/4xx).
 
-- La sesión vive en **cookies**. `proxy.js` la renueva antes de las páginas que la leen en el servidor (`/cuenta`, `/ingresar`, `/registro`).
+- La sesión vive en **cookies**. `proxy.js` la renueva antes de las páginas que la leen en el servidor (`/cuenta`, `/admin`, `/ingresar`, `/registro`).
 - `/cuenta` muestra los pedidos del usuario. Sin sesión, redirige a `/ingresar?siguiente=/cuenta`.
 - El header pregunta por la sesión a `/api/auth/sesion`, así el resto de la tienda sigue siendo estática.
-- El primer admin se crea a mano, desde el SQL Editor de Supabase:
-  `update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'tu@email.com');`
+
+## Panel admin
+
+En `/admin` (link "Panel admin" en el menú de la cuenta) un usuario con `role = 'admin'` maneja la tienda sin tocar código:
+
+- **Resumen:** productos visibles, variantes sin stock, pedidos y la lista de variantes para reponer.
+- **Productos:** todos los productos (también los ocultos), con el stock de cada variante editable en el lugar y un interruptor para mostrarlos u ocultarlos.
+- **Cargar y editar:** formulario de café o accesorio con sus variantes (peso o nombre, precio y stock) y la foto, que se sube a Supabase Storage.
+- **Borrar:** borra el producto con sus variantes y reseñas. Si ya tiene pedidos la base no lo permite, y conviene ocultarlo.
+
+Cada cambio regenera las páginas de la tienda al instante (`revalidatePath`).
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/productos` | Crea un producto con sus variantes. |
+| `PUT /api/productos/:id` | Reemplaza los datos y sincroniza las variantes (actualiza, crea y borra). |
+| `PATCH /api/productos/:id` | Muestra u oculta el producto (`{ activo }`). |
+| `DELETE /api/productos/:id` | Borra el producto (409 si tiene pedidos). |
+| `PATCH /api/variantes/:id` | Cambia el stock (`{ stock }`). |
+| `POST /api/imagenes` | Sube una foto (FormData, JPG/PNG/WebP de hasta 4 MB) y devuelve su URL. |
+
+**Seguridad en tres capas:** la página o la API chequea el rol (sin sesión: 401 o redirección a ingresar; sin ser admin: 403 o 404), la validación se repite en el servidor (`lib/validacion-producto.js`, la misma del formulario) y RLS en la base rechaza cualquier cambio que no venga de un admin.
+
+**El primer admin** se crea a mano. Primero se registra la cuenta en `/registro` y después, en el SQL Editor de Supabase:
+
+```sql
+update public.profiles set role = 'admin'
+where id = (select id from auth.users where email = 'tu@email.com');
+```
 
 ## Estructura
 
 ```
 app/                 páginas (App Router) y componentes
+  admin/             panel admin (resumen, lista de productos, formulario)
   api/auth/          Route Handlers de la cuenta
+  api/productos/, api/variantes/, api/imagenes/   Route Handlers del panel admin
   components/        componentes compartidos (header, tarjetas, carrito, sesión, test…)
 proxy.js             renueva la sesión antes de las páginas que la usan
 lib/
   auth.js            validación de los formularios de cuenta (navegador y servidor)
+  admin.js           chequeo de rol admin, errores de la base y regeneración de la tienda
+  validacion-producto.js   validación del formulario de productos (navegador y servidor)
   supabase/          cliente de Supabase con la sesión del usuario (cookies)
   datos.js           lecturas del catálogo desde Supabase
   productos.js       perfiles, tostados, moliendas y helpers de producto
