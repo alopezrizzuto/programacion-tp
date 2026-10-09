@@ -128,6 +128,13 @@ export default function Header() {
                       Mis pedidos
                     </Link>
                   </li>
+                  {usuario.role === "admin" && (
+                    <li>
+                      <Link href="/admin" onClick={cerrarTodo} className="block rounded-xl px-4 py-2.5 hover:bg-kraft/60">
+                        Panel admin
+                      </Link>
+                    </li>
+                  )}
                   <li>
                     <button
                       type="button"
@@ -195,6 +202,9 @@ export default function Header() {
           {usuario ? (
             <>
               <li><Link href="/cuenta" onClick={cerrarTodo} className="block py-2">Mis pedidos</Link></li>
+              {usuario.role === "admin" && (
+                <li><Link href="/admin" onClick={cerrarTodo} className="block py-2">Panel admin</Link></li>
+              )}
               <li><button type="button" onClick={cerrarSesion} className="block py-2">Cerrar sesión</button></li>
             </>
           ) : (

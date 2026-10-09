@@ -35,5 +35,5 @@ export async function proxy(request) {
 
 // Solo las páginas que leen la sesión en el servidor. El resto de la tienda es estática.
 export const config = {
-  matcher: ["/cuenta/:path*", "/ingresar", "/registro"],
+  matcher: ["/cuenta/:path*", "/admin/:path*", "/ingresar", "/registro"],
 };
