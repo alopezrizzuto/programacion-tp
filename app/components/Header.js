@@ -7,24 +7,38 @@ import { PERFILES } from "@/lib/productos";
 import IconoGrano from "./IconoGrano";
 import IconoBolsa from "./IconoBolsa";
 import { useCarrito } from "./carrito/ProveedorCarrito";
+import { useSesion } from "./sesion/ProveedorSesion";
 
 // Client Component: el header guarda en estado qué menú está abierto
-// (el desplegable de Productos o el menú de celular) y lee la URL actual.
+// (Productos, el de la cuenta o el de celular) y lee la URL actual.
 export default function Header() {
   const pathname = usePathname();
   const { unidades, abrir } = useCarrito();
+  const { usuario, cargando, salir } = useSesion();
   const [productosAbierto, setProductosAbierto] = useState(false);
+  const [cuentaAbierta, setCuentaAbierta] = useState(false);
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
 
   function cerrarTodo() {
     setProductosAbierto(false);
+    setCuentaAbierta(false);
     setMenuMovilAbierto(false);
   }
 
-  // Cierra el desplegable cuando el foco del teclado sale de él
-  function alPerderFoco(evento) {
-    if (!evento.currentTarget.contains(evento.relatedTarget)) setProductosAbierto(false);
+  function cerrarSesion() {
+    cerrarTodo();
+    salir();
   }
+
+  // Cierra un desplegable cuando el foco del teclado sale de él
+  function alPerderFoco(evento, cerrar) {
+    if (!evento.currentTarget.contains(evento.relatedTarget)) cerrar(false);
+  }
+
+  // Después de ingresar se vuelve a la página donde estabas
+  const linkIngresar = ["/ingresar", "/registro"].includes(pathname)
+    ? "/ingresar"
+    : `/ingresar?siguiente=${encodeURIComponent(pathname)}`;
 
   function claseLink(href) {
     const activo = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -54,7 +68,7 @@ export default function Header() {
               className="relative"
               onMouseEnter={() => setProductosAbierto(true)}
               onMouseLeave={() => setProductosAbierto(false)}
-              onBlur={alPerderFoco}
+              onBlur={(evento) => alPerderFoco(evento, setProductosAbierto)}
             >
               <button
                 type="button"
@@ -92,9 +106,45 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link href="/login" className={`hidden text-[15px] sm:block ${claseLink("/login")}`}>
-            Ingresar
-          </Link>
+          {/* Mientras se consulta la sesión se reserva el lugar, para que nada salte */}
+          {cargando ? (
+            <span aria-hidden="true" className="hidden w-16 sm:block" />
+          ) : usuario ? (
+            <div className="relative hidden sm:block" onBlur={(evento) => alPerderFoco(evento, setCuentaAbierta)}>
+              <button
+                type="button"
+                aria-expanded={cuentaAbierta}
+                aria-controls="menu-cuenta"
+                onClick={() => setCuentaAbierta(!cuentaAbierta)}
+                className={`flex items-center gap-1 text-[15px] ${claseLink("/cuenta")}`}
+              >
+                <span className="max-w-32 truncate">Hola, {usuario.nombre.split(" ")[0] || "de nuevo"}</span>
+                <Chevron abierto={cuentaAbierta} />
+              </button>
+              <div id="menu-cuenta" hidden={!cuentaAbierta} className="absolute right-0 top-full w-52 pt-3">
+                <ul className="rounded-2xl bg-crema p-2 text-tostado shadow-2xl">
+                  <li>
+                    <Link href="/cuenta" onClick={cerrarTodo} className="block rounded-xl px-4 py-2.5 hover:bg-kraft/60">
+                      Mis pedidos
+                    </Link>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={cerrarSesion}
+                      className="block w-full rounded-xl px-4 py-2.5 text-left hover:bg-kraft/60"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <Link href={linkIngresar} className={`hidden text-[15px] sm:block ${claseLink("/ingresar")}`}>
+              Ingresar
+            </Link>
+          )}
           {/* Bolsa con contador: abre el panel del carrito */}
           <button
             type="button"
@@ -142,7 +192,14 @@ export default function Header() {
           </li>
           <li><Link href="/#elegi" onClick={cerrarTodo} className="block py-2">Elegí tu café ideal</Link></li>
           <li><Link href="/contacto" onClick={cerrarTodo} className="block py-2">Contacto</Link></li>
-          <li><Link href="/login" onClick={cerrarTodo} className="block py-2">Ingresar</Link></li>
+          {usuario ? (
+            <>
+              <li><Link href="/cuenta" onClick={cerrarTodo} className="block py-2">Mis pedidos</Link></li>
+              <li><button type="button" onClick={cerrarSesion} className="block py-2">Cerrar sesión</button></li>
+            </>
+          ) : (
+            <li><Link href={linkIngresar} onClick={cerrarTodo} className="block py-2">Ingresar</Link></li>
+          )}
         </ul>
       </nav>
     </header>

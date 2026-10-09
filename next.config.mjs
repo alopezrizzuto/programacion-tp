@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // El catálogo pasó a llamarse /productos: los links viejos redirigen
+  // Rutas que cambiaron de nombre: los links viejos redirigen a las nuevas
   async redirects() {
-    return [{ source: "/catalogo", destination: "/productos", permanent: true }];
+    return [
+      { source: "/catalogo", destination: "/productos", permanent: true },
+      { source: "/login", destination: "/ingresar", permanent: true },
+    ];
   },
 };
 

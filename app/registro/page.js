@@ -1,11 +1,22 @@
 import Link from "next/link";
-import Campo from "../components/Campo";
+import { redirect } from "next/navigation";
+import FormularioRegistro from "./FormularioRegistro";
+import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { destinoSeguro } from "@/lib/auth";
 
 export const metadata = {
   title: "Crear cuenta",
 };
 
-export default function RegistroPage() {
+export default async function RegistroPage({ searchParams }) {
+  const destino = destinoSeguro((await searchParams).siguiente);
+
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) redirect(destino);
+
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <h1 className="font-display text-5xl">Crear cuenta</h1>
@@ -14,27 +25,13 @@ export default function RegistroPage() {
         <li>Repetí tus compras en un clic.</li>
       </ul>
 
-      <form className="mt-10 space-y-6 rounded-3xl bg-kraft/50 p-6 sm:p-8">
-        <Campo id="nombre" etiqueta="Nombre" autoComplete="name" />
-        <Campo id="email" etiqueta="Email" type="email" autoComplete="email" />
-        <Campo id="password" etiqueta="Contraseña" type="password" autoComplete="new-password" />
-        <Campo id="confirmacion" etiqueta="Repetí la contraseña" type="password" autoComplete="new-password" />
-        <div>
-          {/* El envío del formulario (validación + fetch) se implementa en E3 */}
-          <button
-            type="submit"
-            disabled
-            className="boton w-full"
-          >
-            Crear cuenta
-          </button>
-          <p className="mt-2 text-center text-sm text-marron">El registro se habilita en la próxima etapa del proyecto.</p>
-        </div>
-      </form>
+      <FormularioRegistro destino={destino} />
 
-      <p className="mt-10 text-center text-sm text-marron">
+      <p className="mt-10 text-center text-marron">
         ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="text-tostado underline">Ingresá</Link>
+        <Link href={`/ingresar?siguiente=${encodeURIComponent(destino)}`} className="font-semibold text-tostado underline">
+          Ingresá
+        </Link>
       </p>
     </div>
   );

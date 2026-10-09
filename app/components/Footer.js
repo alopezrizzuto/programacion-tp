@@ -31,7 +31,7 @@ export default function Footer() {
             <ul className="mt-4 space-y-2">
               <li><Link href="/#elegi" className="hover:text-crema">Elegí tu café ideal</Link></li>
               <li><Link href="/contacto" className="hover:text-crema">Contacto</Link></li>
-              <li><Link href="/login" className="hover:text-crema">Ingresar</Link></li>
+              <li><Link href="/ingresar" className="hover:text-crema">Ingresar</Link></li>
               <li><Link href="/registro" className="hover:text-crema">Crear cuenta</Link></li>
             </ul>
           </nav>

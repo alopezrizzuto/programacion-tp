@@ -3,6 +3,7 @@ import BarraPromos from "./components/BarraPromos";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { ProveedorCarrito } from "./components/carrito/ProveedorCarrito";
+import { ProveedorSesion } from "./components/sesion/ProveedorSesion";
 import { obtenerProductos } from "@/lib/datos";
 import "./globals.css";
 
@@ -39,15 +40,17 @@ export default async function RootLayout({ children }) {
         >
           Saltar al contenido
         </a>
-        {/* El proveedor comparte el carrito con toda la tienda (header, botones, panel) */}
-        <ProveedorCarrito productos={productos}>
-          <BarraPromos />
-          <Header />
-          <main id="contenido" className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </ProveedorCarrito>
+        {/* Los proveedores comparten la sesión y el carrito con toda la tienda (header, botones, panel) */}
+        <ProveedorSesion>
+          <ProveedorCarrito productos={productos}>
+            <BarraPromos />
+            <Header />
+            <main id="contenido" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </ProveedorCarrito>
+        </ProveedorSesion>
       </body>
     </html>
   );

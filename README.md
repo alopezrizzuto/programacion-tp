@@ -54,12 +54,35 @@ En el **SQL Editor** de Supabase, ejecutar en orden el contenido de:
 
 **Seguridad (RLS):** cualquiera puede ver los productos activos, sus variantes y reseñas; solo un admin los modifica. Cada usuario ve únicamente su perfil y sus órdenes. Un usuario puede cambiar su nombre, pero no su `role`.
 
+## Cuentas de usuario
+
+Registro e ingreso con email y contraseña (Supabase Auth). El navegador nunca habla directo con Supabase Auth: los formularios validan y envían con `fetch` a la API propia, que vuelve a validar.
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/auth/registro` | Crea la cuenta (nombre, email, contraseña) y deja la sesión iniciada. |
+| `POST /api/auth/ingresar` | Inicia sesión. |
+| `POST /api/auth/salir` | Cierra la sesión. |
+| `GET /api/auth/sesion` | Devuelve el usuario conectado (`email`, `nombre`, `role`) o `null`. |
+
+Los errores vuelven como `{ errores: { campo: mensaje } }` (validación, 400) o `{ error: mensaje }` (credenciales u otros, 401/4xx).
+
+- La sesión vive en **cookies**. `proxy.js` la renueva antes de las páginas que la leen en el servidor (`/cuenta`, `/ingresar`, `/registro`).
+- `/cuenta` muestra los pedidos del usuario. Sin sesión, redirige a `/ingresar?siguiente=/cuenta`.
+- El header pregunta por la sesión a `/api/auth/sesion`, así el resto de la tienda sigue siendo estática.
+- El primer admin se crea a mano, desde el SQL Editor de Supabase:
+  `update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'tu@email.com');`
+
 ## Estructura
 
 ```
 app/                 páginas (App Router) y componentes
-  components/        componentes compartidos (header, tarjetas, carrito, test…)
+  api/auth/          Route Handlers de la cuenta
+  components/        componentes compartidos (header, tarjetas, carrito, sesión, test…)
+proxy.js             renueva la sesión antes de las páginas que la usan
 lib/
+  auth.js            validación de los formularios de cuenta (navegador y servidor)
+  supabase/          cliente de Supabase con la sesión del usuario (cookies)
   datos.js           lecturas del catálogo desde Supabase
   productos.js       perfiles, tostados, moliendas y helpers de producto
   tienda.js          promociones (bundles, transferencia, cuotas, envío gratis)
@@ -76,5 +99,6 @@ supabase/
 - **El carrito vive en el navegador** (`localStorage`) y guarda solo variante, molienda y cantidad, nunca precios: los totales se recalculan siempre con los precios de la base.
 - **La molienda no es una variante:** se elige al comprar y no cambia el precio ni el stock.
 - **Las reglas de negocio están en la base:** valores cerrados y rangos con `CHECK`, permisos con RLS.
+- **Una sola validación para el navegador y el servidor** (`lib/auth.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
 
 El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), y el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md).
