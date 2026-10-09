@@ -132,7 +132,7 @@ Se valora el **desarrollo continuo**: commits frecuentes y entregas alineadas al
 
 ## Pendientes de Agustín (no dar por hechos)
 Mientras no estén, el sitio usa reemplazos provisorios (bloque beige con un grano dibujado y el nombre en texto como logo).
-- [ ] **6 fotos de producto** (una por café, la bolsa; no hace falta una por peso). Cuadradas 1200×1200 px, JPG o WebP, mismo fondo crema/beige, misma luz y ángulo. En `public/cafes/` con el slug como nombre: `etiopia-yirgacheffe.jpg`, `kenia-aa.jpg`, `colombia-huila.jpg`, `guatemala-antigua.jpg`, `brasil-cerrado.jpg`, `blend-espresso.jpg`. Al tenerlas: cargarlas desde el panel admin (o completar `imagen_url` en la tabla `productos`).
+- [ ] **6 fotos de producto** (una por café, la bolsa; no hace falta una por peso). Cuadradas 1200×1200 px, JPG o WebP, mismo fondo crema/beige, misma luz y ángulo. En `public/cafes/` con el slug como nombre: `etiopia-yirgacheffe.jpg`, `kenia-aa.jpg`, `colombia-huila.jpg`, `guatemala-antigua.jpg`, `brasil-cerrado.jpg`, `blend-espresso.jpg`. Al tenerlas: subirlas desde el panel admin (Editar producto, Foto del producto).
 - [ ] **Foto principal de la portada** (opcional): horizontal 1920×1080 px, `public/hero.jpg`.
 - [ ] **Logo horizontal** (ícono + "Origen Café"): SVG o PNG transparente, `public/logo.svg`. Reemplaza el texto del `Header`.
 - [ ] **Ícono cuadrado** para la pestaña del navegador: PNG 512×512, `app/icon.png` (reemplaza `app/favicon.ico`).
@@ -147,7 +147,7 @@ Se hace en 3 PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (
 3. ✅ `supabase/seed.sql` con los 6 cafés × 3 pesos, los 4 accesorios y las reseñas (ids fijos).
 4. ✅ Las páginas leen de Supabase (`lib/datos.js`) y se regeneran cada 5 minutos (`revalidate = 300`).
 5. ✅ Registro e ingreso con Supabase Auth: formularios con validación compartida (`lib/auth.js`) + fetch a `/api/auth/*`, sesión en cookies renovada por `proxy.js`, menú de cuenta en el header y `/cuenta` (Mis pedidos).
-6. Panel `/admin` (solo `role = admin`): CRUD de productos (cafés y accesorios), variantes y stock, para manejar la tienda sin tocar código.
+6. ✅ Panel `/admin` (solo `role = admin`): resumen, lista con stock editable y visibilidad, alta/edición/borrado de cafés y accesorios con sus variantes, y fotos en Supabase Storage (`003_imagenes.sql`). API en `/api/productos`, `/api/variantes` y `/api/imagenes`.
 
 ## Convenciones de trabajo
 - **Nunca trabajar directo en `main`.** Una rama por tarea (`feat/landing`, `fix/filtros`) y PR hacia `main`.
