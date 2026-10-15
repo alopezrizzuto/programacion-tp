@@ -3,16 +3,10 @@ import { redirect } from "next/navigation";
 import BotonSalir from "./BotonSalir";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { formatearPrecio } from "@/lib/tienda";
+import { ESTADOS } from "@/lib/ordenes";
 
 export const metadata = {
   title: "Mi cuenta",
-};
-
-const ESTADOS = {
-  pendiente: "Pendiente de pago",
-  pagada: "Pagada",
-  rechazada: "Pago rechazado",
-  cancelada: "Cancelada",
 };
 
 // Página del servidor y dinámica: lee la sesión de las cookies, así que se arma en cada visita.
@@ -29,7 +23,7 @@ export default async function CuentaPage() {
     supabase.from("profiles").select("nombre").eq("id", user.id).single(),
     supabase
       .from("ordenes")
-      .select("id, estado, total, created_at, orden_items(cantidad)")
+      .select("id, codigo, estado, total, created_at, orden_items(cantidad)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
   ]);
@@ -56,7 +50,9 @@ export default async function CuentaPage() {
               return (
                 <li key={orden.id} className="flex flex-wrap items-center justify-between gap-4 py-5">
                   <div>
-                    <p className="font-semibold">Pedido #{orden.id}</p>
+                    <Link href={`/seguimiento/${orden.codigo}`} className="font-semibold underline-offset-2 hover:underline">
+                      Pedido {orden.codigo}
+                    </Link>
                     <p className="text-sm text-marron">
                       {new Date(orden.created_at).toLocaleDateString("es-AR", {
                         dateStyle: "long",
@@ -67,8 +63,8 @@ export default async function CuentaPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold tabular-nums">{formatearPrecio(orden.total)}</p>
-                    <p className={`text-sm ${orden.estado === "rechazada" ? "text-cereza" : "text-marron"}`}>
-                      {ESTADOS[orden.estado]}
+                    <p className={`text-sm ${ESTADOS[orden.estado].tono === "mal" ? "text-cereza" : "text-marron"}`}>
+                      {ESTADOS[orden.estado].nombre}
                     </p>
                   </div>
                 </li>

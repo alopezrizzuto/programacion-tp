@@ -1,0 +1,16 @@
+name: Mantener Supabase activo
+# En el plan gratis, Supabase pausa el proyecto después de 7 días sin actividad
+# (y la tienda deja de cargar). Una consulta chiquita por día lo mantiene activo.
+on:
+  schedule:
+    - cron: "0 12 * * *" # todos los días a las 12:00 UTC (9:00 en Argentina)
+  workflow_dispatch: # también se puede correr a mano desde la pestaña Actions
+jobs:
+  consultar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Leer un producto
+        env:
+          URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          CLAVE: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: curl --fail --silent --show-error "$URL/rest/v1/productos?select=id&limit=1" -H "apikey: $CLAVE" > /dev/null

@@ -30,6 +30,7 @@ export default function Footer() {
             <h2 className="font-semibold text-crema">Ayuda</h2>
             <ul className="mt-4 space-y-2">
               <li><Link href="/#elegi" className="hover:text-crema">Elegí tu café ideal</Link></li>
+              <li><Link href="/seguimiento" className="hover:text-crema">Seguí tu pedido</Link></li>
               <li><Link href="/contacto" className="hover:text-crema">Contacto</Link></li>
               <li><Link href="/ingresar" className="hover:text-crema">Ingresar</Link></li>
               <li><Link href="/registro" className="hover:text-crema">Crear cuenta</Link></li>

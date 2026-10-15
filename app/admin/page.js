@@ -12,7 +12,7 @@ export default async function AdminPage() {
   // El admin ve todos los productos (también los desactivados): lo permite RLS con es_admin()
   const [{ data: productos }, { count: pedidos }] = await Promise.all([
     supabase.from("productos").select("id, nombre, activo, variantes(id, nombre, stock)").order("id"),
-    supabase.from("ordenes").select("id", { count: "exact", head: true }),
+    supabase.from("ordenes").select("id", { count: "exact", head: true }).eq("estado", "pagada"),
   ]);
 
   const variantes = productos.flatMap((producto) => producto.variantes.map((variante) => ({ ...variante, producto })));
@@ -22,7 +22,7 @@ export default async function AdminPage() {
   const datos = [
     [`${productos.filter((producto) => producto.activo).length} de ${productos.length}`, "productos visibles en la tienda"],
     [sinStock.length, sinStock.length === 1 ? "variante sin stock" : "variantes sin stock"],
-    [pedidos ?? 0, pedidos === 1 ? "pedido recibido" : "pedidos recibidos"],
+    [pedidos ?? 0, pedidos === 1 ? "pedido pagado para preparar" : "pedidos pagados para preparar"],
   ];
 
   return (

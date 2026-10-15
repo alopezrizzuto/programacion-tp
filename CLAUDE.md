@@ -59,12 +59,12 @@ Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
 - **Fecha de entrega calculada** (hora de Argentina): compra antes de las 14:00 se despacha ese día hábil; si no, el siguiente. Llega de 1 a 4 días hábiles después del despacho. Saltea fines de semana (no feriados).
 - Urgencia honesta (stock real), garantías de compra y envío, reseñas, estadísticas, FAQ y prueba social ("+10.000 personas").
 - **Prueba social, reseñas y estadísticas son datos de ejemplo.** El footer aclara que es una tienda de demostración (proyecto académico).
-- Antes de E6: el servidor recalcula bundles y descuento por transferencia al crear la orden (nunca confiar en el total del navegador).
+- Al crear la orden, el servidor recalcula precios, stock, bundles, 10% OFF y envío con `armarOrden` (`lib/ordenes.js`, que reutiliza `calcularCarrito`): nunca confía en el total del navegador.
 
 ### Requisitos obligatorios
 - Catálogo con **búsqueda y filtrado**: perfil, tostado, acidez, cuerpo, origen, peso, rango de precio, con stock y búsqueda por texto (nombre, origen, notas).
 - **Carrito y checkout** con Mercado Pago (sandbox).
-- **Usuarios**: registro, login y vista "Mis órdenes".
+- **Usuarios**: registro, login y vista "Mis órdenes" (`/cuenta`). Además se puede comprar sin cuenta y seguir el pedido con su código.
 - **API interna** (Route Handlers) para productos y órdenes.
 - **Supabase con SQL directo**: migraciones y seed en archivos `.sql` versionados.
 - **Webhook** de Mercado Pago que actualiza el estado de la orden.
@@ -74,18 +74,21 @@ Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
 ### Decisiones de simplificación (ya acordadas)
 - El **carrito vive en el cliente** (estado de React + `localStorage`). Recién se persiste al crear la orden. Se abre como panel lateral (con upsell de accesorios minimizable) y también existe la página `/carrito`.
   - En `localStorage` (clave `origen-cafe-carrito`) se guarda solo `{ varianteId, molienda, cantidad }` por línea: **nunca precios**. `lib/carrito-almacen.js` lo lee/escribe y avisa los cambios (React lo lee con `useSyncExternalStore`, también entre pestañas).
-  - `lib/carrito.js` (`calcularCarrito`) calcula totales, bundles (por café y peso, sumando moliendas) y transferencia. Es una función pura: en E6 el servidor la reutiliza para recalcular el total al crear la orden.
+  - `lib/carrito.js` (`calcularCarrito`) calcula totales, bundles (por café y peso, sumando moliendas), envío y transferencia. Es una función pura: el servidor la reutiliza para recalcular el total al crear la orden.
   - `ProveedorCarrito` (Context) comparte el carrito con el header (bolsa con contador), los botones de agregar y el panel (`<dialog>` nativo).
-- **Sin** cálculo de costo de envío por zona ni cupones. El envío es gratis desde $100.000; debajo se muestra como "a calcular" (se define antes de E6).
+- **Envío con costo fijo** ($6.500, `PROMOS.costoEnvio`) en compras de menos de $100.000; gratis desde ahí. **Sin** costo por zona ni cupones.
 - Roles: `cliente` y `admin` (columna `role` en `profiles`).
-- Pago con **Checkout Pro** (redirección a Mercado Pago).
+- **Se compra sin cuenta** (lo pidió Agustín para facilitar la compra): alcanza con el email. Cada pedido tiene un **código de seguimiento** (`OC-` + 10 caracteres al azar) y se consulta en `/seguimiento`. Si hay sesión, el pedido también queda en Mis pedidos.
+- **Dos medios de pago:** Mercado Pago (**Checkout Pro**, redirección) o **transferencia** (10% OFF en los productos; el pedido queda pendiente y el admin confirma el pago en Pedidos).
+- **El stock se descuenta al confirmarse el pago** (webhook o admin), con la función SQL `confirmar_pago` en una transacción. No se reserva al crear el pedido.
+- **Sandbox de Mercado Pago:** se paga como invitado con tarjeta de prueba (titular APRO/OTHE) y un email `test_user_…@testuser.com`; no hace falta la cuenta de comprador de prueba.
 
 ### Modelo de datos (inicial, puede ajustarse)
 - `profiles` (id → auth.users, nombre, role)
 - `productos` (id, categoria [cafe | accesorio], nombre, slug, descripcion, origen, perfil [frutal | equilibrado | intenso], tostado [claro | medio | medio-oscuro | oscuro], acidez 1–5, cuerpo 1–5, notas text[], imagen_url, activo, created_at). Los campos de café (origen, perfil, tostado, acidez, cuerpo, notas) quedan `null` en los accesorios.
 - `variantes` (id, producto_id → productos, nombre [ej. "250 g", "Set x2"], peso_gramos (null en accesorios), precio, stock)
-- `ordenes` (id, user_id → auth.users, estado [pendiente | pagada | rechazada | cancelada], total, mp_preference_id, mp_payment_id, created_at)
-- `orden_items` (id, orden_id → ordenes, variante_id → variantes, molienda (null en accesorios), cantidad, precio_unitario)
+- `ordenes` (id, codigo, user_id → auth.users (null si compró sin cuenta), email, medio_pago [mercadopago | transferencia], estado [pendiente | pagada | enviada | entregada | rechazada | cancelada], envio_* (nombre, teléfono, dirección, ciudad, provincia, código postal), subtotal, descuento_bundles, descuento_transferencia, costo_envio, total, mp_preference_id, mp_payment_id, mp_link, created_at)
+- `orden_items` (id, orden_id → ordenes, variante_id → variantes, descripcion, molienda (null en accesorios), cantidad, precio_unitario)
 
 Los valores cerrados (categoria, perfil, tostado, molienda) y los rangos (acidez y cuerpo de 1 a 5) se validan con `CHECK` en la base.
 
@@ -140,14 +143,21 @@ Mientras no estén, el sitio usa reemplazos provisorios (bloque beige con un gra
 - [ ] **Video del proceso** (reemplaza la animación SVG de la portada): 6–9 s, grano → molinillo → portafiltro → vaso de doble vidrio, fondo marrón oscuro, sujeto centrado, primer y último segundo quietos, 1920×1080 (y 9:16 si se puede), sin audio. Guardarlo en `public/video/proceso.mp4` (sin commitear). Se convierte con `ffmpeg` en una secuencia de ~180 imágenes WebP que un `<canvas>` dibuja según el scroll (técnica tipo Apple), en un PR `feat/video-scroll`.
 - [ ] **Videos de clientes** extrayendo café (2 o 3, verticales, MP4 cortos) para la página de producto. Hasta tenerlos se muestran espacios reservados.
 
-## Tarea en curso: Supabase + autenticación + admin
-Se hace en 3 PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (paso 5), C `feat/admin` (paso 6, con subida de fotos a Supabase Storage). Después, D: Mercado Pago (E6).
+## Tarea en curso: Supabase + autenticación + admin + checkout
+Se hizo en PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (paso 5), C `feat/admin` (paso 6), D `feat/checkout` (paso 7).
 1. ✅ Proyecto en Supabase, variables en `.env.local`, Vercel y GitHub (Variables de Actions, para el build de CI).
 2. ✅ Migraciones en `supabase/migrations/` con el modelo de datos de arriba (incluye `categoria` y accesorios), `CHECK`s y RLS.
 3. ✅ `supabase/seed.sql` con los 6 cafés × 3 pesos, los 4 accesorios y las reseñas (ids fijos).
 4. ✅ Las páginas leen de Supabase (`lib/datos.js`) y se regeneran cada 5 minutos (`revalidate = 300`).
 5. ✅ Registro e ingreso con Supabase Auth: formularios con validación compartida (`lib/auth.js`) + fetch a `/api/auth/*`, sesión en cookies renovada por `proxy.js`, menú de cuenta en el header y `/cuenta` (Mis pedidos).
 6. ✅ Panel `/admin` (solo `role = admin`): resumen, lista con stock editable y visibilidad, alta/edición/borrado de cafés y accesorios con sus variantes, y fotos en Supabase Storage (`003_imagenes.sql`). API en `/api/productos`, `/api/variantes` y `/api/imagenes`.
+7. ✅ Checkout con Mercado Pago (E6): `/checkout` (compra sin cuenta), `POST /api/ordenes`, webhook `/api/webhooks/mercadopago` (firma HMAC + consulta del pago + `confirmar_pago`), `/seguimiento` por código y Pedidos en el admin (`004_checkout.sql`). Falta probar el webhook real en Vercel: configurar la URL en Mercado Pago y cargar `MERCADOPAGO_WEBHOOK_SECRET`.
+
+## Próximas tareas
+- **PR `feat/email` (Resend):** email de confirmación con el código y el link de seguimiento al crear el pedido. Sin dominio propio, Resend solo le manda al dueño de la cuenta (alcanza para la demo).
+- E3 (resto): formulario de contacto y cuestionario vía `POST /api/recomendacion`.
+- E4: búsqueda y filtros del catálogo + `GET /api/productos`.
+- Tests E2E con Playwright.
 
 ## Convenciones de trabajo
 - **Nunca trabajar directo en `main`.** Una rama por tarea (`feat/landing`, `fix/filtros`) y PR hacia `main`.

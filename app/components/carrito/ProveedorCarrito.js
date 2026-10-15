@@ -9,6 +9,7 @@ import {
   obtenerItemsEnServidor,
   quitarItem,
   suscribir,
+  vaciar,
 } from "@/lib/carrito-almacen";
 import PanelCarrito from "./PanelCarrito";
 
@@ -41,6 +42,9 @@ export function ProveedorCarrito({ productos, children }) {
     sumar: (item) => agregarItem(item, productos),
     cambiarCantidad: (clave, cantidad) => cambiarCantidad(clave, cantidad, productos),
     quitar: quitarItem,
+    // Para el checkout: los ítems tal como se guardan (variante, molienda y cantidad, sin precios)
+    items,
+    vaciar,
   };
 
   return (

@@ -9,7 +9,8 @@ Tienda online de café de especialidad: 6 cafés en bolsa (250 g, 500 g y 1 kg, 
 - **Next.js 16** (App Router) + **React 19** + **Tailwind CSS v4**, en JavaScript.
 - **Supabase**: base de datos Postgres con SQL directo (migraciones y seed versionados), Auth y RLS.
 - **Vercel** para el despliegue (con preview por PR) y **GitHub Actions** para CI (lint + build).
-- Próximamente: **Mercado Pago** (Checkout Pro + webhook) y **Playwright** (tests E2E).
+- **Mercado Pago** Checkout Pro (sandbox) con webhook.
+- Próximamente: email de confirmación (Resend) y **Playwright** (tests E2E).
 
 ## Cómo correrlo
 
@@ -29,10 +30,12 @@ Otros scripts: `npm run lint`, `npm run build` y `npm start`.
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API (URL base, sin `/rest/v1`) | No |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → Publishable key | No: es pública, la protección la da RLS |
+| `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys → Secret keys (`sb_secret_…`) | **Sí** |
+| `MERCADOPAGO_ACCESS_TOKEN` | Mercado Pago Developers → tu aplicación → Credenciales de prueba → Access Token | **Sí** |
+| `MERCADOPAGO_WEBHOOK_SECRET` | Mercado Pago Developers → tu aplicación → Webhooks → Configurar notificaciones → clave secreta | **Sí** |
 
-Las dos tienen que estar en tres lugares: `.env.local` (para desarrollo), en Vercel (Settings → Environment Variables, en Production, Preview y Development) y en GitHub (Settings → Secrets and variables → Actions → **Variables**), porque el build de CI lee el catálogo de la base.
-
-La clave secreta (`service_role`) nunca se commitea ni se usa en el navegador.
+- Las dos **públicas** van en `.env.local`, en Vercel (Settings → Environment Variables, en Production, Preview y Development) y en GitHub (Settings → Secrets and variables → Actions → **Variables**), porque el build de CI lee el catálogo de la base.
+- Las tres **secretas** van solo en `.env.local` y en Vercel (marcadas como *Sensitive*). Nunca se commitean ni llegan al navegador: no empiezan con `NEXT_PUBLIC_` y solo las leen los Route Handlers y las páginas del servidor.
 
 ### Base de datos
 
@@ -42,6 +45,9 @@ En el **SQL Editor** de Supabase, ejecutar en orden el contenido de:
 2. `supabase/migrations/002_seguridad.sql`: función `es_admin()` y políticas RLS.
 3. `supabase/seed.sql`: los 6 cafés con sus 18 variantes, los 4 accesorios y las reseñas de ejemplo.
 4. `supabase/migrations/003_imagenes.sql`: bucket `productos` de Supabase Storage para las fotos (lectura pública, solo el admin sube o borra).
+5. `supabase/migrations/004_checkout.sql`: pedidos sin cuenta (código de seguimiento), datos de envío, medio de pago, montos y la función `confirmar_pago` (marca el pedido como pagado y descuenta el stock en una sola transacción).
+
+En el plan gratis, Supabase pausa el proyecto después de 7 días sin uso: el workflow `mantener-supabase.yml` hace una consulta diaria para evitarlo.
 
 ## Modelo de datos
 
@@ -51,9 +57,9 @@ En el **SQL Editor** de Supabase, ejecutar en orden el contenido de:
 | `variantes` | Cada peso de bolsa (o la única variante de un accesorio), con precio y stock propios. |
 | `resenas` | Reseñas de cada producto. |
 | `profiles` | Un perfil por usuario de Supabase Auth, con su `role` (`cliente` o `admin`). |
-| `ordenes` / `orden_items` | Pedidos y sus líneas (con la molienda elegida). Se usan desde el checkout. |
+| `ordenes` / `orden_items` | Pedidos (código de seguimiento, email, envío, medio de pago, montos y estado) y sus líneas (con la molienda y el nombre del producto al comprarlo). |
 
-**Seguridad (RLS):** cualquiera puede ver los productos activos, sus variantes y reseñas; solo un admin los modifica. Cada usuario ve únicamente su perfil y sus órdenes. Un usuario puede cambiar su nombre, pero no su `role`.
+**Seguridad (RLS):** cualquiera puede ver los productos activos, sus variantes y reseñas; solo un admin los modifica. Cada usuario ve únicamente su perfil y sus órdenes. Los pedidos los crea y actualiza solo el servidor, con la clave secreta. Un usuario puede cambiar su nombre, pero no su `role`.
 
 ## Cuentas de usuario
 
@@ -72,11 +78,40 @@ Los errores vuelven como `{ errores: { campo: mensaje } }` (validación, 400) o 
 - `/cuenta` muestra los pedidos del usuario. Sin sesión, redirige a `/ingresar?siguiente=/cuenta`.
 - El header pregunta por la sesión a `/api/auth/sesion`, así el resto de la tienda sigue siendo estática.
 
+## Checkout y pedidos
+
+Se puede comprar **sin cuenta**: alcanza con el email. Si hay sesión, el pedido también queda en Mis pedidos.
+
+1. **`/checkout`**: contacto, envío y medio de pago (validación compartida en `lib/validacion-checkout.js`). Se envía con `fetch` a `POST /api/ordenes` solo qué variante, qué molienda y cuántas: **precios, stock, bundles, 10% OFF y envío se recalculan en el servidor** con `armarOrden` (`lib/ordenes.js`), que reutiliza `calcularCarrito`.
+2. **Mercado Pago:** el servidor crea una *preferencia* de Checkout Pro (con `fetch`, sin SDK) por el total exacto del pedido y la persona paga en Mercado Pago. Después vuelve a `/seguimiento/<código>`.
+3. **Transferencia (10% OFF en los productos):** el pedido queda pendiente y se muestran los datos para transferir (de ejemplo). El admin confirma el pago desde el panel.
+4. **Webhook `POST /api/webhooks/mercadopago`:** verifica la firma `x-signature` (HMAC-SHA256 con la clave secreta del webhook), consulta el pago a la API de Mercado Pago (nunca le cree al aviso), controla que el monto coincida y llama a `confirmar_pago`. Si llega dos veces el mismo aviso, el stock no se descuenta dos veces.
+5. **`/seguimiento`**: cualquiera con el código (`OC-` y 10 caracteres al azar, imposible de adivinar) ve el estado del pedido, sus productos y el envío, y puede reintentar el pago.
+
+Estados: pendiente → pagada → enviada → entregada (o rechazada / cancelada). El envío cuesta $6.500 en compras de menos de $100.000 (`lib/tienda.js`). El stock se descuenta al confirmarse el pago y no al crear el pedido: así un pedido abandonado no bloquea stock.
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/ordenes` | Crea el pedido. Devuelve `{ codigo }` o `{ codigo, linkPago }` (Mercado Pago). 400 con errores por campo, 409 si falta stock o algo cambió. |
+| `POST /api/webhooks/mercadopago` | Recibe los avisos de pago de Mercado Pago (401 si la firma no es válida). |
+| `PATCH /api/ordenes/:id` | Solo admin: cambia el estado (`{ estado }`) según las transiciones permitidas. |
+
+### Probar un pago (sandbox)
+
+Con el Access Token de prueba y en una ventana de incógnito:
+
+1. En el checkout, usar un email con el formato `test_user_123@testuser.com`. Con un email común, Mercado Pago responde *"Una de las partes con la que intentás hacer el pago es de prueba"*.
+2. En Mercado Pago, elegir **Tarjeta** (sin cuenta): Mastercard `5031 7557 3453 0604`, vencimiento `11/30`, código `123`, DNI `12345678`.
+3. El nombre del titular define el resultado: `APRO` aprobado, `OTHE` rechazado, `CONT` pendiente.
+
+Para que el webhook funcione, Mercado Pago tiene que poder llegar a la URL: en Vercel (https), no en `localhost`. En Mercado Pago Developers → Webhooks se configura `https://<dominio>/api/webhooks/mercadopago` con el evento **Pagos**, y la clave secreta que genera va en `MERCADOPAGO_WEBHOOK_SECRET`.
+
 ## Panel admin
 
 En `/admin` (link "Panel admin" en el menú de la cuenta) un usuario con `role = 'admin'` maneja la tienda sin tocar código:
 
-- **Resumen:** productos visibles, variantes sin stock, pedidos y la lista de variantes para reponer.
+- **Resumen:** productos visibles, variantes sin stock, pedidos pagados para preparar y la lista de variantes para reponer.
+- **Pedidos:** filtros (para preparar, esperando pago, enviados, todos), detalle de productos y envío, y botones para confirmar el pago, marcar como enviado o entregado y cancelar.
 - **Productos:** todos los productos (también los ocultos), con el stock de cada variante editable en el lugar y un interruptor para mostrarlos u ocultarlos.
 - **Cargar y editar:** formulario de café o accesorio con sus variantes (peso o nombre, precio y stock) y la foto, que se sube a Supabase Storage.
 - **Borrar:** borra el producto con sus variantes y reseñas. Si ya tiene pedidos la base no lo permite, y conviene ocultarlo.
@@ -105,8 +140,11 @@ where id = (select id from auth.users where email = 'tu@email.com');
 
 ```
 app/                 páginas (App Router) y componentes
-  admin/             panel admin (resumen, lista de productos, formulario)
+  admin/             panel admin (resumen, pedidos, lista de productos, formulario)
+  checkout/          formulario de compra
+  seguimiento/       búsqueda por código y página de cada pedido
   api/auth/          Route Handlers de la cuenta
+  api/ordenes/, api/webhooks/mercadopago/   pedidos y avisos de pago
   api/productos/, api/variantes/, api/imagenes/   Route Handlers del panel admin
   components/        componentes compartidos (header, tarjetas, carrito, sesión, test…)
 proxy.js             renueva la sesión antes de las páginas que la usan
@@ -114,11 +152,14 @@ lib/
   auth.js            validación de los formularios de cuenta (navegador y servidor)
   admin.js           chequeo de rol admin, errores de la base y regeneración de la tienda
   validacion-producto.js   validación del formulario de productos (navegador y servidor)
-  supabase/          cliente de Supabase con la sesión del usuario (cookies)
+  validacion-checkout.js   validación del checkout (navegador y servidor)
+  ordenes.js         armado de la orden, estados y código de seguimiento (funciones puras)
+  mercadopago.js     preferencia, consulta de pagos y verificación de la firma del webhook
+  supabase/          clientes de Supabase: con la sesión del usuario (cookies) y con la clave secreta (solo servidor)
   datos.js           lecturas del catálogo desde Supabase
   productos.js       perfiles, tostados, moliendas y helpers de producto
   tienda.js          promociones (bundles, transferencia, cuotas, envío gratis)
-  carrito.js         cálculo puro del carrito (se reutilizará en el servidor al crear la orden)
+  carrito.js         cálculo puro del carrito (lo reutiliza el servidor al crear la orden)
   recomendacion.js   lógica del test "Elegí tu café ideal"
 supabase/
   migrations/        esquema y seguridad en SQL
@@ -131,6 +172,7 @@ supabase/
 - **El carrito vive en el navegador** (`localStorage`) y guarda solo variante, molienda y cantidad, nunca precios: los totales se recalculan siempre con los precios de la base.
 - **La molienda no es una variante:** se elige al comprar y no cambia el precio ni el stock.
 - **Las reglas de negocio están en la base:** valores cerrados y rangos con `CHECK`, permisos con RLS.
-- **Una sola validación para el navegador y el servidor** (`lib/auth.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
+- **Una sola validación para el navegador y el servidor** (`lib/auth.js`, `lib/validacion-producto.js`, `lib/validacion-checkout.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
+- **Se compra sin cuenta**, con un código de seguimiento: menos pasos para comprar. La clave secreta de Supabase se usa solo en el servidor, para lo que no depende de una sesión (crear pedidos, el webhook y el seguimiento por código).
 
 El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), y el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md).

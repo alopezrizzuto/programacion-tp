@@ -95,6 +95,15 @@ export default function Header() {
             </li>
             <li>
               <Link
+                href="/seguimiento"
+                aria-current={pathname.startsWith("/seguimiento") ? "page" : undefined}
+                className={claseLink("/seguimiento")}
+              >
+                Seguí tu pedido
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/contacto"
                 aria-current={pathname === "/contacto" ? "page" : undefined}
                 className={claseLink("/contacto")}
@@ -198,6 +207,7 @@ export default function Header() {
             <MenuProductos alElegir={cerrarTodo} movil />
           </li>
           <li><Link href="/#elegi" onClick={cerrarTodo} className="block py-2">Elegí tu café ideal</Link></li>
+          <li><Link href="/seguimiento" onClick={cerrarTodo} className="block py-2">Seguí tu pedido</Link></li>
           <li><Link href="/contacto" onClick={cerrarTodo} className="block py-2">Contacto</Link></li>
           {usuario ? (
             <>
