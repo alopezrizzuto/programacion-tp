@@ -1,6 +1,7 @@
 import TarjetaCafe from "../components/TarjetaCafe";
 import TarjetaAccesorio from "../components/TarjetaAccesorio";
 import Escala from "../components/Escala";
+import { ESTILO_PERFIL } from "../components/estilos";
 import { PERFILES } from "@/lib/productos";
 import { obtenerAccesorios, obtenerCafes } from "@/lib/datos";
 import { BUNDLES, PROMOS } from "@/lib/tienda";
@@ -57,33 +58,34 @@ export default async function ProductosPage() {
             key={perfil.id}
             id={perfil.id}
             aria-labelledby={`titulo-${perfil.id}`}
-            className="mt-20 scroll-mt-24 border-t border-marron/20 pt-10"
+            className="mt-16 grid scroll-mt-24 grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-3"
           >
-            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
-              <div>
-                <h2 id={`titulo-${perfil.id}`} className="font-display text-5xl leading-none">
-                  {perfil.plural}
-                </h2>
-                <p className="mt-3 max-w-xl text-lg text-marron">{perfil.descripcion}</p>
-              </div>
-              <dl className="flex gap-8 text-sm">
+            {/* Presentación del perfil, en su color: ocupa el lugar de una tarjeta más */}
+            <div className={`col-span-2 flex flex-col rounded-3xl p-7 lg:col-span-1 ${ESTILO_PERFIL[perfil.id]}`}>
+              <h2 id={`titulo-${perfil.id}`} className="font-display text-4xl leading-none">
+                {perfil.plural}
+              </h2>
+              <p className="mt-4 text-lg opacity-85">{perfil.descripcion}</p>
+              <dl className="mt-auto flex flex-wrap gap-x-8 gap-y-4 pt-8 text-sm">
+                <div className="w-full">
+                  <dt className="opacity-80">Ideal para</dt>
+                  <dd className="mt-1 font-semibold">{perfil.idealPara}</dd>
+                </div>
                 <div>
-                  <dt className="text-marron">Acidez</dt>
+                  <dt className="opacity-80">Acidez</dt>
                   <dd className="mt-2"><Escala valor={CARACTER_PERFIL[perfil.id].acidez} /></dd>
                 </div>
                 <div>
-                  <dt className="text-marron">Cuerpo</dt>
+                  <dt className="opacity-80">Cuerpo</dt>
                   <dd className="mt-2"><Escala valor={CARACTER_PERFIL[perfil.id].cuerpo} /></dd>
                 </div>
               </dl>
             </div>
-            <div className="mt-8 grid gap-5 md:grid-cols-2">
-              {cafes
-                .filter((cafe) => cafe.perfil === perfil.id)
-                .map((cafe) => (
-                  <TarjetaCafe key={cafe.id} cafe={cafe} horizontal />
-                ))}
-            </div>
+            {cafes
+              .filter((cafe) => cafe.perfil === perfil.id)
+              .map((cafe) => (
+                <TarjetaCafe key={cafe.id} cafe={cafe} />
+              ))}
           </section>
         ))}
       </div>
@@ -99,7 +101,7 @@ export default async function ProductosPage() {
         <p className="mt-3 max-w-xl text-lg text-marron">
           Lo justo para que el café rinda en casa como en una cafetería: guardarlo bien, medirlo y servirlo.
         </p>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-4">
           {accesorios.map((accesorio) => (
             <TarjetaAccesorio key={accesorio.id} accesorio={accesorio} />
           ))}
