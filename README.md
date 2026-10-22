@@ -2,6 +2,8 @@
 
 Tienda online de café de especialidad: 6 cafés en bolsa (250 g, 500 g y 1 kg, con la molienda a elección) y 4 accesorios. Trabajo integrador de Programación Web (ITBA, 2026 Q1).
 
+**Demo pública:** https://programacion-tp-black.vercel.app
+
 > Es una tienda de demostración: las reseñas, estadísticas y pagos son de ejemplo.
 
 ## Stack
@@ -33,6 +35,7 @@ Otros scripts: `npm run lint`, `npm run build` y `npm start`.
 | `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys → Secret keys (`sb_secret_…`) | **Sí** |
 | `MERCADOPAGO_ACCESS_TOKEN` | Mercado Pago Developers → tu aplicación → Credenciales de prueba → Access Token | **Sí** |
 | `MERCADOPAGO_WEBHOOK_SECRET` | Mercado Pago Developers → tu aplicación → Webhooks → Configurar notificaciones → clave secreta | **Sí** |
+| `MERCADOPAGO_SANDBOX` | `true` mientras se usen credenciales de prueba (ver "Probar un pago") | No |
 
 - Las dos **públicas** van en `.env.local`, en Vercel (Settings → Environment Variables, en Production, Preview y Development) y en GitHub (Settings → Secrets and variables → Actions → **Variables**), porque el build de CI lee el catálogo de la base.
 - Las tres **secretas** van solo en `.env.local` y en Vercel (marcadas como *Sensitive*). Nunca se commitean ni llegan al navegador: no empiezan con `NEXT_PUBLIC_` y solo las leen los Route Handlers y las páginas del servidor.
@@ -104,7 +107,9 @@ Con el Access Token de prueba y en una ventana de incógnito:
 2. En Mercado Pago, elegir **Tarjeta** (sin cuenta): Mastercard `5031 7557 3453 0604`, vencimiento `11/30`, código `123`, DNI `12345678`.
 3. El nombre del titular define el resultado: `APRO` aprobado, `OTHE` rechazado, `CONT` pendiente.
 
-Para que el webhook funcione, Mercado Pago tiene que poder llegar a la URL: en Vercel (https), no en `localhost`. En Mercado Pago Developers → Webhooks se configura `https://<dominio>/api/webhooks/mercadopago` con el evento **Pagos**, y la clave secreta que genera va en `MERCADOPAGO_WEBHOOK_SECRET`.
+Para que el webhook funcione, Mercado Pago tiene que poder llegar a la URL: en Vercel (https), no en `localhost`. En Mercado Pago Developers → Webhooks se configura la URL **completa** `https://<dominio>/api/webhooks/mercadopago` con el evento **Pagos**, y la clave secreta que genera va en `MERCADOPAGO_WEBHOOK_SECRET`. (Con solo el dominio, los avisos llegan a la portada y Mercado Pago recibe 405.)
+
+**La firma en el sandbox.** Con credenciales de prueba, el pago lo cobra la *cuenta vendedor de prueba* que crea Mercado Pago, y los avisos de pagos reales llegan firmados con la clave de esa cuenta, que no está disponible: la firma no coincide (la simulación del panel sí, porque la firma tu aplicación). Por eso, con `MERCADOPAGO_SANDBOX=true`, el webhook registra una advertencia y sigue. No es un agujero: lo que protege de verdad es que el pago se le consulta a Mercado Pago con nuestro token y solo se confirma si está aprobado, es de ese pedido y el monto coincide. Con credenciales reales, sin esa variable, la firma se exige siempre.
 
 ## Panel admin
 
