@@ -24,19 +24,14 @@ export async function POST(request) {
     secreto: process.env.MERCADOPAGO_WEBHOOK_SECRET,
   });
   if (!valida) {
-    // Diagnóstico temporal: qué mandó Mercado Pago, para ver por qué no coincide la firma.
-    // Nada de esto es secreto: la firma solo sirve para este aviso y no permite deducir la clave.
-    console.warn(
-      "Webhook con firma inválida:",
-      JSON.stringify({
-        consulta: url.search,
-        idAviso: request.headers.get("x-request-id"),
-        firma: request.headers.get("x-signature"),
-        claveCargada: Boolean(process.env.MERCADOPAGO_WEBHOOK_SECRET),
-        cuerpo,
-      }),
-    );
-    return Response.json({ error: "Firma inválida." }, { status: 401 });
+    // En el sandbox, Mercado Pago firma los pagos con la clave de la cuenta vendedor de prueba,
+    // que no tenemos: la firma nunca coincide. Con MERCADOPAGO_SANDBOX=true se sigue igual,
+    // porque lo que protege de verdad es el paso 2: el pago se le pide a Mercado Pago con nuestro
+    // token y solo se confirma si está aprobado, es de ese pedido y el monto coincide.
+    if (process.env.MERCADOPAGO_SANDBOX !== "true") {
+      return Response.json({ error: "Firma inválida." }, { status: 401 });
+    }
+    console.warn(`Webhook: firma no verificada (sandbox), se consulta el pago ${idPago} a Mercado Pago.`);
   }
 
   let pago;
