@@ -50,7 +50,10 @@ E-commerce de **café en bolsa** con variantes, más una línea chica de **acces
 - Paleta (definida una sola vez en `app/globals.css`): tostado `#2A1A12` (dominante: secciones oscuras, header, botones), crema `#F3EBDD` (fondo de lectura), kraft `#D6C1A0` (superficies), marrón `#634330` (texto secundario, AA sobre crema y kraft), cereza `#9A2E22` (único acento: solo descuentos y urgencia de stock).
 - Tipografía: una sola familia, **Archivo** (variable en ancho), con `next/font`. Títulos anchos y pesados como un sello; texto a 17 px; números de ancho fijo para datos y precios.
 - Evitar los "tics" de página generada: etiquetas en MAYÚSCULAS sobre cada título, textos unidos con "·", flechas "→" decorativas, numeración 01/02/03 si el contenido no es una secuencia.
-- Un solo momento memorable: la animación de la portada al scrollear (grano → molinillo → portafiltro → taza), hoy hecha con SVG (`ProcesoScroll.js`) y respetando "reducir movimiento"; se reemplazará por el video del proceso (ver Pendientes). El resto, sobrio.
+- **El movimiento vive solo en la portada:** el hero (`HeroPortada.js`), con tres bolsas que entran al cargar y se alejan apenas al bajar (animación de CSS atada al scroll, sin JavaScript), y después el recorrido del grano a la taza (`ProcesoScroll.js`, SVG de 3 pantallas con link para saltearlo). El recorrido se reemplazará por el video del proceso (ver Pendientes). Todo respeta "reducir movimiento". En el resto de la tienda solo hay microinteracciones (la bolsa se levanta al pasar el mouse por una tarjeta).
+- **Referencias del rediseño (octubre):** Fellow para la presentación del producto (imagen protagonista sobre fondo de estudio, tarjetas con poco texto), ORYZO para el movimiento de la portada (con moderación) y Cuervo Café y Café Registrado para la claridad comercial (qué se vende y cómo comprar desde la primera pantalla, beneficios a la vista).
+- **Packaging ilustrado** (`BolsaCafe.js`): mientras no haya fotos, cada café se muestra como una bolsa kraft con su etiqueta (clara para frutales, marrón para equilibrados, tostado para intensos). `ImagenProducto` la usa cuando `imagen_url` está vacío; al subir la foto desde el admin, la reemplaza sola.
+- **Portada, en orden:** hero (qué es Origen, Comprar café, Elegí tu café ideal y beneficios), recorrido animado, Nuestros cafés (los 6) y accesorios, "Comprar es simple" (`BeneficiosCompra.js`: envíos, pagos, packs y compra sin cuenta), test, comparación con el café del súper y reseñas.
 
 ### Incentivos de conversión
 Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
@@ -134,7 +137,7 @@ Se valora el **desarrollo continuo**: commits frecuentes y entregas alineadas al
 | 9 | Pulido, README final, ensayo de la demo |
 
 ## Pendientes de Agustín (no dar por hechos)
-Mientras no estén, el sitio usa reemplazos provisorios (bloque beige con un grano dibujado y el nombre en texto como logo).
+Mientras no estén, el sitio usa reemplazos provisorios: bolsas ilustradas (`BolsaCafe.js`) para los cafés, íconos de línea para los accesorios y el nombre en texto como logo.
 - [ ] **6 fotos de producto** (una por café, la bolsa; no hace falta una por peso). Cuadradas 1200×1200 px, JPG o WebP, mismo fondo crema/beige, misma luz y ángulo. En `public/cafes/` con el slug como nombre: `etiopia-yirgacheffe.jpg`, `kenia-aa.jpg`, `colombia-huila.jpg`, `guatemala-antigua.jpg`, `brasil-cerrado.jpg`, `blend-espresso.jpg`. Al tenerlas: subirlas desde el panel admin (Editar producto, Foto del producto).
 - [ ] **Foto principal de la portada** (opcional): horizontal 1920×1080 px, `public/hero.jpg`.
 - [ ] **Logo horizontal** (ícono + "Origen Café"): SVG o PNG transparente, `public/logo.svg`. Reemplaza el texto del `Header`.
