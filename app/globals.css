@@ -79,6 +79,32 @@ body:has(dialog[open]) {
   }
 }
 
+/* Portada: las bolsas del hero entran una sola vez, al cargar */
+@keyframes entrar-bolsa {
+  from {
+    opacity: 0;
+    transform: translateY(56px);
+  }
+}
+
+/* Portada: al bajar, las bolsas se alejan apenas. Es una animación atada al scroll (sin JavaScript):
+   solo en navegadores que la soportan y si la persona no pidió reducir el movimiento */
+@keyframes alejar-bolsas {
+  to {
+    transform: translateY(12%) scale(0.92);
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .hero-bolsas {
+      animation: alejar-bolsas linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 90vh;
+    }
+  }
+}
+
 :focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 3px;
