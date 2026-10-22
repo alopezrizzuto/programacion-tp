@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
 
-// Animación de la portada: al scrollear, el café recorre grano → molinillo → portafiltro → vaso.
-// La sección mide 4 pantallas de alto; adentro, una "ventana" fija (sticky) muestra el dibujo.
+// Recorrido de la portada (va después del hero): al scrollear, el café recorre grano → molinillo → portafiltro → vaso.
+// Se reemplazará por el video del proceso cuando esté. La sección mide 3 pantallas de alto; adentro, una "ventana" fija (sticky) muestra el dibujo.
 // "progreso" va de 0 (recién llegás) a 1 (terminaste de recorrerla) y mueve todo el dibujo.
 
 const PASOS = [
@@ -107,8 +106,8 @@ export default function ProcesoScroll() {
   return (
     <section
       ref={seccion}
-      aria-labelledby="titulo-portada"
-      className="relative h-[420vh] bg-tostado text-crema motion-reduce:h-auto"
+      aria-labelledby="titulo-recorrido"
+      className="relative h-[300vh] bg-tostado text-crema motion-reduce:h-auto"
     >
       <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden motion-reduce:static motion-reduce:h-auto">
         <div className="mx-auto grid h-full max-w-7xl grid-rows-[minmax(0,1fr)] lg:grid-cols-[1fr_1.1fr] motion-reduce:grid-rows-none">
@@ -117,12 +116,11 @@ export default function ProcesoScroll() {
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-tostado via-tostado to-transparent lg:hidden motion-reduce:hidden" />
             <div className="relative grid w-full [grid-template-areas:'capa'] motion-reduce:block motion-reduce:space-y-10">
               <Panel visible={enIntro || sinMovimiento}>
-                <h1 id="titulo-portada" className="font-display text-5xl leading-[0.95] sm:text-7xl">
+                <h2 id="titulo-recorrido" className="font-display text-5xl leading-[0.95] sm:text-6xl">
                   Del grano a tu taza
-                </h1>
+                </h2>
                 <p className="mt-6 max-w-md text-lg text-kraft">
-                  Café de especialidad tostado cada semana en Buenos Aires.
-                  {!sinMovimiento && " Bajá para ver el recorrido."}
+                  Así llega cada bolsa a tu casa.{!sinMovimiento && " Seguí bajando."}
                 </p>
               </Panel>
 
@@ -144,16 +142,12 @@ export default function ProcesoScroll() {
                   Elegí dos o tres cosas que te gustan y te recomendamos el café justo.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <a href="#elegi" tabIndex={enFinal || sinMovimiento ? 0 : -1} className="boton bg-crema text-tostado hover:bg-kraft">
+                  <a href="#cafes" tabIndex={enFinal || sinMovimiento ? 0 : -1} className="boton bg-crema text-tostado hover:bg-kraft">
+                    Ver los cafés
+                  </a>
+                  <a href="#elegi" tabIndex={enFinal || sinMovimiento ? 0 : -1} className="boton-secundario text-crema">
                     Hacer el test
                   </a>
-                  <Link
-                    href="/productos"
-                    tabIndex={enFinal || sinMovimiento ? 0 : -1}
-                    className="boton-secundario text-crema"
-                  >
-                    Ver todos los productos
-                  </Link>
                 </div>
               </Panel>
             </div>
@@ -164,6 +158,11 @@ export default function ProcesoScroll() {
             <Escena progreso={progreso} />
           </div>
         </div>
+
+        {/* Para no obligar a nadie a recorrer la animación entera */}
+        <a href="#cafes" className="absolute right-4 top-4 z-20 text-sm text-kraft underline underline-offset-4 hover:text-crema sm:right-6 motion-reduce:hidden">
+          Saltear el recorrido
+        </a>
 
         {/* Barra de avance del recorrido */}
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-white/10 motion-reduce:hidden">

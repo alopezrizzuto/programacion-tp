@@ -1,6 +1,6 @@
 import { PROMOS, formatearPrecio } from "@/lib/tienda";
 
-// Garantías de compra y envío. Se usa en la portada y en la página de producto.
+// Garantías de compra y envío. Se usa en las páginas de producto y en el carrito.
 const GARANTIAS = [
   {
     titulo: "Pago seguro",

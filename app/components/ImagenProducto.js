@@ -1,12 +1,9 @@
 import Image from "next/image";
-import IconoGrano from "./IconoGrano";
+import BolsaCafe from "./BolsaCafe";
 
-// Color del grano provisorio según el tueste de cada perfil (más claro = tueste más claro)
-const COLOR_POR_PERFIL = {
-  frutal: "text-[#a8794f]",
-  equilibrado: "text-marron",
-  intenso: "text-tostado",
-};
+// Fondo de "estudio" parejo para todos los productos, como en una sesión de fotos:
+// luz arriba al centro y más sombra hacia los bordes
+const ESCENARIO = "bg-[radial-gradient(ellipse_at_50%_30%,#f8f2e8_0%,#ece0cc_60%,#e0cdb0_100%)]";
 
 // Íconos provisorios de los accesorios (según su slug), dibujados con líneas.
 // Un accesorio nuevo cargado desde el admin usa el del contenedor como genérico.
@@ -40,14 +37,14 @@ const ICONOS_ACCESORIO = {
   ),
 };
 
-// Muestra la foto del producto (café o accesorio). Mientras no haya foto
-// (imagen_url en null), muestra un reemplazo provisorio del mismo tamaño.
-// "miniatura": en tamaños chicos (carrito) se oculta el texto del reemplazo provisorio
+// Muestra la foto del producto (café o accesorio). Mientras no haya foto (imagen_url en null),
+// muestra la bolsa ilustrada (cafés) o el ícono (accesorios) sobre el mismo fondo de estudio.
+// "miniatura": en tamaños chicos (carrito) la bolsa va sin textos, que no se leerían.
 export default function ImagenProducto({ producto, sizes, priority = false, aspecto = "aspect-square", miniatura = false }) {
   const esCafe = producto.categoria === "cafe";
 
   return (
-    <div className={`relative ${aspecto} overflow-hidden bg-kraft`}>
+    <div className={`relative ${aspecto} overflow-hidden ${ESCENARIO}`}>
       {producto.imagen_url ? (
         <Image
           src={producto.imagen_url}
@@ -60,26 +57,28 @@ export default function ImagenProducto({ producto, sizes, priority = false, aspe
       ) : (
         <div
           role="img"
-          aria-label={`${esCafe ? "Bolsa de café " : ""}${producto.nombre} (foto próximamente)`}
-          className="flex h-full flex-col items-center justify-center gap-3"
+          aria-label={esCafe ? `Bolsa de café ${producto.nombre}` : producto.nombre}
+          className="flex h-full items-center justify-center"
         >
           {esCafe ? (
-            <IconoGrano className={`${miniatura ? "h-1/2 w-1/2" : "h-1/4 w-1/4"} ${COLOR_POR_PERFIL[producto.perfil]}`} />
+            // La bolsa se levanta apenas cuando el mouse pasa por la tarjeta (group-hover)
+            <BolsaCafe
+              cafe={producto}
+              simple={miniatura}
+              className="h-[84%] w-auto transition-transform duration-300 ease-out group-hover:-translate-y-1.5 group-hover:-rotate-1"
+            />
           ) : (
             <svg
               viewBox="0 0 64 64"
               aria-hidden="true"
-              className={`${miniatura ? "h-1/2 w-1/2" : "h-1/4 w-1/4"} text-tostado`}
+              className={`${miniatura ? "h-1/2 w-1/2" : "h-[38%] w-[38%]"} text-tostado drop-shadow-[0_10px_8px_rgba(42,26,18,0.18)] transition-transform duration-300 ease-out group-hover:-translate-y-1.5`}
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth={miniatura ? 3 : 2.2}
               strokeLinejoin="round"
             >
               {ICONOS_ACCESORIO[producto.slug] ?? ICONOS_ACCESORIO["contenedor-al-vacio"]}
             </svg>
-          )}
-          {!miniatura && (
-            <span className="font-display text-lg text-marron">{esCafe ? producto.origen : "Accesorio"}</span>
           )}
         </div>
       )}

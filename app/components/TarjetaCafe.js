@@ -1,68 +1,64 @@
 import Link from "next/link";
 import ImagenProducto from "./ImagenProducto";
 import Estrellas from "./Estrellas";
-import Escala from "./Escala";
 import { ESTILO_PERFIL } from "./estilos";
-import { precioDesde, promedioResenas, tieneStock } from "@/lib/productos";
+import { nombrePeso, obtenerPerfil, precioDesde, promedioResenas, tieneStock } from "@/lib/productos";
 import { formatearPrecio, precioTransferencia } from "@/lib/tienda";
 
-// Tarjeta de café pensada como la etiqueta de la bolsa: origen, nombre, notas y una mini ficha.
-// "horizontal": en pantallas grandes pone la imagen a la izquierda (se usa en /productos).
-export default function TarjetaCafe({ cafe, horizontal = false }) {
+// "250 g, 500 g y 1 kg"
+function listarPesos(variantes) {
+  const pesos = variantes.map((variante) => nombrePeso(variante.peso_gramos));
+  return pesos.length > 1 ? `${pesos.slice(0, -1).join(", ")} y ${pesos.at(-1)}` : pesos[0];
+}
+
+// Tarjeta de café: la imagen es la protagonista (como en una tienda de diseño) y abajo va
+// solo lo necesario para decidir: perfil, notas, pesos y precio.
+export default function TarjetaCafe({ cafe }) {
   const desde = precioDesde(cafe);
+  const perfil = obtenerPerfil(cafe.perfil);
 
   return (
     // "relative" + el link con after:inset-0 hacen que toda la tarjeta sea clickeable
-    <article
-      className={`group relative flex flex-col rounded-3xl p-3 ${horizontal ? "lg:flex-row" : ""} ${ESTILO_PERFIL[cafe.perfil]}`}
-    >
-      <div className={`relative overflow-hidden rounded-2xl ${horizontal ? "lg:w-[44%] lg:shrink-0 lg:self-start" : ""}`}>
-        <ImagenProducto producto={cafe} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
+    <article className="group relative flex flex-col">
+      <div className="relative overflow-hidden rounded-3xl">
+        <ImagenProducto
+          producto={cafe}
+          aspecto="aspect-[4/5]"
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        />
+        <p className={`absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-xs font-semibold sm:left-4 sm:top-4 sm:px-3 sm:py-1 sm:text-sm ${ESTILO_PERFIL[cafe.perfil]}`}>
+          {perfil.nombre}
+        </p>
         {!tieneStock(cafe) && (
-          <p className="absolute left-3 top-3 rounded-full bg-tostado px-3 py-1 text-sm text-crema">Sin stock</p>
+          <p className="absolute bottom-3 left-3 rounded-full bg-tostado px-2.5 py-0.5 text-xs text-crema sm:bottom-4 sm:left-4 sm:px-3 sm:py-1 sm:text-sm">Sin stock</p>
         )}
       </div>
 
-      <div className={`flex flex-1 flex-col px-3 pb-3 pt-5 ${horizontal ? "lg:pl-6 lg:pt-3" : ""}`}>
-        <p className="opacity-80">
-          {cafe.origen}, {cafe.region}
-        </p>
-        <h3 className="mt-1 font-display text-3xl leading-none">
-          <Link href={`/cafes/${cafe.slug}`} className="after:absolute after:inset-0 after:rounded-3xl group-hover:underline">
-            {cafe.nombre}
-          </Link>
-        </h3>
-        <p className="mt-2 first-letter:uppercase">{cafe.notas.join(", ")}</p>
-
-        <dl className="mt-5 grid grid-cols-3 gap-3 border-y border-current/15 py-4 text-sm">
-          <div>
-            <dt className="opacity-80">Tostado</dt>
-            <dd className="mt-1 font-semibold first-letter:uppercase">{cafe.tostado}</dd>
-          </div>
-          <div>
-            <dt className="opacity-80">Acidez</dt>
-            <dd className="mt-2"><Escala valor={cafe.acidez} ancho="w-3" /></dd>
-          </div>
-          <div>
-            <dt className="opacity-80">Cuerpo</dt>
-            <dd className="mt-2"><Escala valor={cafe.cuerpo} ancho="w-3" /></dd>
-          </div>
-        </dl>
-
-        <div className="mt-auto flex items-end justify-between gap-4 pt-5">
-          <div>
-            <p>
-              Desde <strong className="text-lg font-semibold">{formatearPrecio(desde)}</strong>
-            </p>
-            <p className="opacity-80">{formatearPrecio(precioTransferencia(desde))} con transferencia</p>
-          </div>
+      <div className="flex flex-1 flex-col px-1 pt-4 sm:pt-5">
+        {/* En celular (dos tarjetas por fila) las estrellas van debajo del nombre */}
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <h3 className="font-display text-lg leading-tight sm:text-2xl sm:leading-none">
+            <Link href={`/cafes/${cafe.slug}`} className="after:absolute after:inset-0 after:rounded-3xl group-hover:underline">
+              {cafe.nombre}
+            </Link>
+          </h3>
           {cafe.resenas.length > 0 && (
-            <p className="flex items-center gap-1.5 text-sm">
+            <p className="flex shrink-0 items-center gap-1.5 text-sm">
               <Estrellas puntaje={promedioResenas(cafe)} className="h-3.5 w-3.5" />
               <span>({cafe.resenas.length})</span>
             </p>
           )}
         </div>
+        <p className="mt-2 text-sm first-letter:uppercase sm:text-base">{cafe.notas.join(", ")}</p>
+        <p className="mt-1 hidden text-sm text-marron sm:block">
+          {cafe.origen}, tostado {cafe.tostado}. En {listarPesos(cafe.variantes)}.
+        </p>
+        <p className="mt-auto pt-4">
+          Desde <strong className="font-semibold tabular-nums sm:text-lg">{formatearPrecio(desde)}</strong>
+          <span className="block text-xs text-marron tabular-nums sm:text-sm">
+            {formatearPrecio(precioTransferencia(desde))} con transferencia
+          </span>
+        </p>
       </div>
     </article>
   );
