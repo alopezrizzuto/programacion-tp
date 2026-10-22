@@ -23,7 +23,21 @@ export async function POST(request) {
     idPago,
     secreto: process.env.MERCADOPAGO_WEBHOOK_SECRET,
   });
-  if (!valida) return Response.json({ error: "Firma inválida." }, { status: 401 });
+  if (!valida) {
+    // Diagnóstico temporal: qué mandó Mercado Pago, para ver por qué no coincide la firma.
+    // Nada de esto es secreto: la firma solo sirve para este aviso y no permite deducir la clave.
+    console.warn(
+      "Webhook con firma inválida:",
+      JSON.stringify({
+        consulta: url.search,
+        idAviso: request.headers.get("x-request-id"),
+        firma: request.headers.get("x-signature"),
+        claveCargada: Boolean(process.env.MERCADOPAGO_WEBHOOK_SECRET),
+        cuerpo,
+      }),
+    );
+    return Response.json({ error: "Firma inválida." }, { status: 401 });
+  }
 
   let pago;
   try {
