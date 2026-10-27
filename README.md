@@ -177,7 +177,7 @@ supabase/
 - **El carrito vive en el navegador** (`localStorage`) y guarda solo variante, molienda y cantidad, nunca precios: los totales se recalculan siempre con los precios de la base.
 - **La molienda no es una variante:** se elige al comprar y no cambia el precio ni el stock.
 - **Las reglas de negocio están en la base:** valores cerrados y rangos con `CHECK`, permisos con RLS.
-- **Diseño:** el producto es protagonista (imagen grande sobre fondo de estudio, tarjetas con poco texto) y el movimiento vive solo en la portada: el hero y el recorrido del grano a la taza, con animaciones de `transform` y `opacity` que respetan "reducir movimiento". Mientras no haya fotos, los cafés se muestran con una bolsa kraft ilustrada (`app/components/BolsaCafe.js`).
+- **Diseño:** el producto es protagonista (imagen grande sobre fondo de estudio, tarjetas con poco texto) y el movimiento vive solo en la portada: el hero y el recorrido del grano a la taza, con animaciones de `transform` y `opacity` que respetan "reducir movimiento". Las fotos de producto y la del hero se generaron con IA a partir de una misma foto de referencia (misma bolsa, luz y fondo); un producto sin foto se muestra con una bolsa kraft ilustrada (`app/components/BolsaCafe.js`).
 - **Una sola validación para el navegador y el servidor** (`lib/auth.js`, `lib/validacion-producto.js`, `lib/validacion-checkout.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
 - **Se compra sin cuenta**, con un código de seguimiento: menos pasos para comprar. La clave secreta de Supabase se usa solo en el servidor, para lo que no depende de una sesión (crear pedidos, el webhook y el seguimiento por código).
 
