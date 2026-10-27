@@ -141,7 +141,7 @@ function Resultados({ resultados }) {
             >
               <div className="p-3 pb-0">
                 <div className="overflow-hidden rounded-2xl">
-                  <ImagenProducto producto={cafe} sizes="(min-width: 1024px) 33vw, 100vw" aspecto="aspect-[16/9]" />
+                  <ImagenProducto producto={cafe} sizes="(min-width: 1024px) 33vw, 100vw" aspecto="aspect-[16/9]" completa />
                 </div>
               </div>
               <div className="flex flex-1 flex-col p-6">

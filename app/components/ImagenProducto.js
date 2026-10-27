@@ -40,7 +40,9 @@ const ICONOS_ACCESORIO = {
 // Muestra la foto del producto (café o accesorio). Mientras no haya foto (imagen_url en null),
 // muestra la bolsa ilustrada (cafés) o el ícono (accesorios) sobre el mismo fondo de estudio.
 // "miniatura": en tamaños chicos (carrito) la bolsa va sin textos, que no se leerían.
-export default function ImagenProducto({ producto, sizes, priority = false, aspecto = "aspect-square", miniatura = false }) {
+// "completa": muestra la foto entera en lugar de recortarla para llenar el espacio (para formatos
+// apaisados, donde recortar cortaría la bolsa); los bordes quedan con el mismo fondo de estudio.
+export default function ImagenProducto({ producto, sizes, priority = false, aspecto = "aspect-square", miniatura = false, completa = false }) {
   const esCafe = producto.categoria === "cafe";
 
   return (
@@ -52,7 +54,7 @@ export default function ImagenProducto({ producto, sizes, priority = false, aspe
           fill
           sizes={sizes}
           priority={priority}
-          className="object-cover"
+          className={completa ? "object-contain" : "object-cover"}
         />
       ) : (
         <div
