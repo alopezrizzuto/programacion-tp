@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Ícono de la pestaña: el grano del header, crema sobre tostado (la paleta de la marca) -->
+  <rect width="32" height="32" rx="7" fill="#2a1a12" />
+  <g transform="translate(4 4)">
+    <ellipse cx="12" cy="12" rx="7" ry="10" transform="rotate(30 12 12)" fill="#f3ebdd" />
+    <path d="M9 4.5c3 2.5 1 6.5 3 9s3.5 4 3 6" fill="none" stroke="#2a1a12" stroke-width="1.6" stroke-linecap="round" />
+  </g>
+</svg>
