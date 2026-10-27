@@ -1,15 +1,7 @@
 import Link from "next/link";
-import BolsaCafe from "./BolsaCafe";
-import { PERFILES } from "@/lib/productos";
+import Image from "next/image";
+import fotoPortada from "../../public/portada.webp";
 import { PROMOS, formatearPrecio } from "@/lib/tienda";
-
-// Las tres bolsas del hero (una por perfil): posición, tamaño, giro y cuándo entra cada una
-const POSICIONES = [
-  "-left-[2%] bottom-[8%] w-[41%] -rotate-[9deg] lg:w-[44%]",
-  "left-1/2 bottom-0 z-10 w-[50%] -translate-x-1/2 lg:w-[55%]",
-  "-right-[2%] bottom-[8%] w-[41%] rotate-[8deg] lg:w-[44%]",
-];
-const DEMORAS = ["0.25s", "0.1s", "0.4s"];
 
 const BENEFICIOS = [
   `Envío gratis desde ${formatearPrecio(PROMOS.envioGratisDesde)}`,
@@ -18,10 +10,8 @@ const BENEFICIOS = [
 ];
 
 // Primera pantalla de la portada: qué vende Origen y cómo comprar, sin esperar ninguna animación.
-// Solo las bolsas tienen movimiento: entran una vez al cargar (entrar-bolsa) y se alejan apenas al bajar (hero-bolsas, en globals.css).
+// Solo la foto tiene movimiento: entra una vez al cargar (entrar-bolsa) y se aleja apenas al bajar (hero-bolsas, en globals.css).
 export default function HeroPortada({ cafes }) {
-  const bolsas = PERFILES.map((perfil) => cafes.find((cafe) => cafe.perfil === perfil.id)).filter(Boolean);
-
   return (
     <section aria-labelledby="titulo-portada" className="relative overflow-hidden bg-tostado text-crema">
       {/* Luz cálida detrás de las bolsas */}
@@ -61,17 +51,17 @@ export default function HeroPortada({ cafes }) {
           </ul>
         </div>
 
-        {/* Decorativo: las bolsas ya se nombran en la grilla de cafés */}
-        <div aria-hidden="true" className="hero-bolsas relative mx-auto h-[18rem] w-full max-w-xl sm:h-[28rem] lg:h-[37rem] lg:max-w-none">
-          {bolsas.map((cafe, i) => (
-            <div
-              key={cafe.id}
-              className={`absolute animate-[entrar-bolsa_0.9s_cubic-bezier(0.2,0.8,0.2,1)_both] ${POSICIONES[i]}`}
-              style={{ animationDelay: DEMORAS[i] }}
-            >
-              <BolsaCafe cafe={cafe} className="h-auto w-full drop-shadow-[0_24px_30px_rgba(0,0,0,0.35)]" />
-            </div>
-          ))}
+        {/* Foto de las tres bolsas (una por perfil). Decorativa: los cafés se nombran en la grilla de abajo.
+            La máscara funde los bordes de la foto con el fondo oscuro, para que no se vea el recuadro. */}
+        <div className="hero-bolsas relative mx-auto w-full max-w-xl lg:max-w-none">
+          <Image
+            src={fotoPortada}
+            alt=""
+            priority
+            sizes="(min-width: 1024px) 50vw, (min-width: 640px) 36rem, 100vw"
+            placeholder="blur"
+            className="h-auto w-full animate-[entrar-bolsa_0.9s_cubic-bezier(0.2,0.8,0.2,1)_both] [mask-image:radial-gradient(ellipse_closest-side,black_62%,transparent_100%)]"
+          />
         </div>
       </div>
     </section>
