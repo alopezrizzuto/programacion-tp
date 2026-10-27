@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-// Recorrido de la portada (va después del hero): al scrollear, el café recorre grano → molinillo → portafiltro → vaso.
-// Se reemplazará por el video del proceso cuando esté. La sección mide 3 pantallas de alto; adentro, una "ventana" fija (sticky) muestra el dibujo.
-// "progreso" va de 0 (recién llegás) a 1 (terminaste de recorrerla) y mueve todo el dibujo.
+// Recorrido de la portada (va después del hero): un video del grano a la taza que avanza con el scroll.
+// La sección mide 3 pantallas de alto; adentro, una "ventana" fija (sticky) muestra el video y los textos.
+// "progreso" va de 0 (recién llegás) a 1 (terminaste de recorrerla): mueve el video y decide qué texto se ve.
 
 const PASOS = [
   {
@@ -21,46 +21,19 @@ const PASOS = [
   },
 ];
 
-// Tramos del recorrido: [inicio, fin] de cada paso dentro del progreso total
+// Tramos del recorrido: [inicio, fin] de cada paso dentro del progreso total.
+// El video tiene tres tomas de unos 3 segundos, así que cada texto coincide con su toma.
 const TRAMOS = [
   [0.1, 0.37],
   [0.37, 0.64],
   [0.64, 0.9],
 ];
 
-// Hacia dónde mira la "cámara" en cada momento: [progreso, y del foco, zoom]
-const CAMARA = [
-  [0, 440, 1.15],
-  [0.1, 210, 1.5],
-  [0.3, 210, 1.5],
-  [0.4, 430, 1.5],
-  [0.57, 430, 1.5],
-  [0.67, 660, 1.45],
-  [0.86, 660, 1.45],
-  [0.96, 440, 1.15],
-];
-
-// Posiciones fijas de los granos y de la molienda (desfasados para que no caigan todos juntos)
-const GRANOS = [
-  [176, 0], [214, 0.22], [196, 0.45], [228, 0.68], [184, 0.12], [206, 0.84], [168, 0.56], [222, 0.33],
-];
-const MOLIENDA = Array.from({ length: 18 }, (_, i) => [192 + ((i * 7) % 17), (i * 0.37) % 1]);
-
 const limitar = (valor, min = 0, max = 1) => Math.min(max, Math.max(min, valor));
-const suave = (t) => t * t * (3 - 2 * t);
-const tramo = (p, [inicio, fin]) => limitar((p - inicio) / (fin - inicio));
 
-function camara(p) {
-  for (let i = 0; i < CAMARA.length - 1; i++) {
-    const [p1, y1, z1] = CAMARA[i];
-    const [p2, y2, z2] = CAMARA[i + 1];
-    if (p <= p2) {
-      const t = suave(limitar((p - p1) / (p2 - p1)));
-      return { y: y1 + (y2 - y1) * t, zoom: z1 + (z2 - z1) * t };
-    }
-  }
-  return { y: 440, zoom: 1.15 };
-}
+// En qué segundo del video corresponde estar según el progreso del scroll.
+// Arranca un poco después de entrar (0.05) y termina un poco antes del final (0.95).
+const segundoDelVideo = (progreso, duracion) => limitar((progreso - 0.05) / 0.9) * (duracion - 0.05);
 
 // Lee la preferencia del sistema "reducir movimiento" y se entera si cambia
 function suscribirMovimiento(avisar) {
@@ -153,9 +126,9 @@ export default function ProcesoScroll() {
             </div>
           </div>
 
-          {/* Dibujo: decorativo, los textos ya cuentan lo que pasa */}
-          <div className="absolute inset-x-0 top-0 bottom-[38%] lg:relative lg:inset-auto lg:h-full motion-reduce:hidden lg:motion-reduce:block">
-            <Escena progreso={progreso} />
+          {/* Video: decorativo, los textos ya cuentan lo que pasa */}
+          <div className="absolute inset-x-0 top-0 bottom-[38%] lg:relative lg:inset-auto lg:h-full motion-reduce:relative motion-reduce:inset-auto motion-reduce:aspect-square motion-reduce:h-auto lg:motion-reduce:h-auto lg:motion-reduce:self-center">
+            <VideoProceso progreso={progreso} sinMovimiento={sinMovimiento} seccion={seccion} />
           </div>
         </div>
 
@@ -185,143 +158,57 @@ function Panel({ visible, children }) {
   );
 }
 
-function Escena({ progreso }) {
-  const grano = tramo(progreso, TRAMOS[0]);
-  const molido = tramo(progreso, TRAMOS[1]);
-  const taza = tramo(progreso, TRAMOS[2]);
-  const vapor = tramo(progreso, [0.86, 0.98]);
-  const { y, zoom } = camara(progreso);
+// La máscara funde los bordes del video con el fondo oscuro de la sección
+const ESTILO_VIDEO =
+  "h-full w-full object-cover [mask-image:radial-gradient(ellipse_closest-side,black_72%,transparent_100%)]";
 
-  // Niveles de llenado (en unidades del dibujo)
-  const nivelTolva = suave(grano) * 70;
-  const nivelFiltro = suave(molido) * 30;
-  const nivelVaso = suave(limitar((taza - 0.12) / 0.88)) * 92;
-  const superficieVaso = 740 - nivelVaso;
-  // El chorro baja al empezar el paso 3 y se corta al final
-  const finChorro = 508 + limitar(taza * 5) * (superficieVaso - 508);
-  const inicioChorro = 508 + limitar((taza - 0.85) / 0.15) * (superficieVaso - 508);
+// El video no se reproduce solo: el scroll lo lleva al segundo justo (currentTime), hacia adelante o hacia atrás.
+// Está codificado con todos los cuadros independientes, así cada salto se dibuja al instante.
+// Para no quitarle velocidad a la portada, recién se descarga cuando la sección está a una pantalla de distancia.
+function VideoProceso({ progreso, sinMovimiento, seccion }) {
+  const video = useRef(null);
+  const [cerca, setCerca] = useState(false);
+
+  useEffect(() => {
+    const observador = new IntersectionObserver(
+      ([entrada]) => {
+        if (entrada.isIntersecting) {
+          setCerca(true);
+          observador.disconnect();
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    observador.observe(seccion.current);
+    return () => observador.disconnect();
+  }, [seccion]);
+
+  // Cada vez que cambia el progreso, el video salta al cuadro que corresponde
+  useEffect(() => {
+    const elemento = video.current;
+    if (elemento?.duration) elemento.currentTime = segundoDelVideo(progreso, elemento.duration);
+  }, [progreso]);
+
+  // Con "reducir movimiento" no hay video: queda la imagen del final (el espresso servido)
+  if (sinMovimiento) {
+    // eslint-disable-next-line @next/next/no-img-element -- es un cuadro del propio video, ya optimizado (13 KB)
+    return <img src="/video/proceso-final.webp" alt="" className={ESTILO_VIDEO} />;
+  }
 
   return (
-    <svg
-      viewBox="0 0 400 900"
-      preserveAspectRatio="xMidYMid meet"
+    <video
+      ref={video}
+      src={cerca ? "/video/proceso.mp4" : undefined}
+      poster="/video/proceso-inicio.webp"
+      muted
+      playsInline
+      preload="auto"
       aria-hidden="true"
-      className="h-full w-full"
-    >
-      <defs>
-        <clipPath id="clip-tolva">
-          <path d="M137 72 H263 L227 163 H173 Z" />
-        </clipPath>
-        <clipPath id="clip-filtro">
-          <path d="M141 443 H259 V458 Q259 489 228 489 H172 Q141 489 141 458 Z" />
-        </clipPath>
-        <clipPath id="clip-vaso">
-          <path d="M143 609 H257 L247 721 Q244 739 226 739 H174 Q156 739 153 721 Z" />
-        </clipPath>
-      </defs>
-
-      <g transform={`translate(200 450) scale(${zoom}) translate(-200 ${-y})`}>
-        {/* Granos cayendo a la tolva */}
-        {grano > 0 &&
-          grano < 1 &&
-          GRANOS.map(([x, desfase], i) => {
-            const caida = (grano * 2.6 + desfase) % 1;
-            return <Grano key={i} x={x} y={-40 + caida * (160 - nivelTolva)} giro={caida * 220 + i * 40} />;
-          })}
-
-        {/* Molinillo */}
-        <g clipPath="url(#clip-tolva)">
-          <rect x="130" y={163 - nivelTolva} width="140" height={nivelTolva} fill="#7a4b30" />
-          {nivelTolva > 12 &&
-            [158, 182, 206, 230].map((x, i) => (
-              <Grano key={x} x={x + (i % 2) * 6} y={170 - nivelTolva + 10} giro={i * 50} />
-            ))}
-        </g>
-        <path d="M135 70 H265 L228 165 H172 Z" fill="#f3ebdd" fillOpacity="0.06" stroke="#f3ebdd" strokeWidth="3" strokeLinejoin="round" />
-        <rect x="164" y="165" width="72" height="14" rx="3" fill="#d6c1a0" />
-        <rect x="150" y="179" width="100" height="120" rx="16" fill="#3d2a1f" stroke="#f3ebdd" strokeWidth="3" />
-        <circle cx="200" cy="232" r="24" fill="none" stroke="#d6c1a0" strokeWidth="3" />
-        <circle cx="200" cy="232" r="6" fill="#d6c1a0" transform={`rotate(${molido * 720} 200 232)`} />
-        <path d="M188 299 H212 V322 H188 Z" fill="#d6c1a0" />
-
-        {/* Molienda cayendo al portafiltro */}
-        {molido > 0 &&
-          molido < 1 &&
-          MOLIENDA.map(([x, desfase], i) => {
-            const caida = (molido * 3 + desfase) % 1;
-            const abrir = (x - 200) * caida * 0.8;
-            return <circle key={i} cx={x + abrir} cy={326 + caida * (486 - nivelFiltro - 326)} r="2.4" fill="#b58a62" />;
-          })}
-
-        {/* Portafiltro */}
-        <g clipPath="url(#clip-filtro)">
-          <rect x="138" y={489 - nivelFiltro} width="124" height={nivelFiltro} fill="#8a5c3c" />
-        </g>
-        <path
-          d="M138 440 H262 V458 Q262 492 228 492 H172 Q138 492 138 458 Z"
-          fill="none"
-          stroke="#f3ebdd"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        <rect x="130" y="434" width="140" height="8" rx="4" fill="#d6c1a0" />
-        <path d="M262 452 L366 447 Q380 447 380 457 Q380 467 366 467 L262 464 Z" fill="#d6c1a0" />
-        <rect x="183" y="492" width="10" height="16" rx="2" fill="#f3ebdd" />
-        <rect x="207" y="492" width="10" height="16" rx="2" fill="#f3ebdd" />
-
-        {/* Chorro de espresso */}
-        {taza > 0 && finChorro > inicioChorro && (
-          <g stroke="#c58b55" strokeWidth="3.5" strokeLinecap="round">
-            <line x1="188" y1={inicioChorro} x2="191" y2={finChorro} />
-            <line x1="212" y1={inicioChorro} x2="209" y2={finChorro} />
-          </g>
-        )}
-
-        {/* Vaso de doble vidrio con el café llenándose */}
-        <g clipPath="url(#clip-vaso)">
-          <rect x="140" y={superficieVaso} width="120" height={nivelVaso} fill="#6b3f26" />
-          <rect x="140" y={superficieVaso} width="120" height={Math.min(9, nivelVaso)} fill="#d6a06a" />
-        </g>
-        <path
-          d="M130 600 H270 L258 730 Q255 752 230 752 H170 Q145 752 142 730 Z"
-          fill="#f3ebdd"
-          fillOpacity="0.05"
-          stroke="#f3ebdd"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M142 608 H258 L248 722 Q245 740 226 740 H174 Q155 740 152 722 Z"
-          fill="none"
-          stroke="#f3ebdd"
-          strokeOpacity="0.45"
-          strokeWidth="2"
-        />
-        <ellipse cx="200" cy="762" rx="90" ry="6" fill="#000" fillOpacity="0.25" />
-
-        {/* Vapor: sube con el scroll al final */}
-        <g
-          fill="none"
-          stroke="#f3ebdd"
-          strokeWidth="3"
-          strokeLinecap="round"
-          opacity={vapor * 0.7}
-          transform={`translate(0 ${-vapor * 24})`}
-        >
-          <path d="M176 590 q-10 -16 0 -32 q10 -16 0 -32" />
-          <path d="M200 584 q-10 -16 0 -32 q10 -16 0 -32 q-10 -16 0 -32" />
-          <path d="M224 590 q-10 -16 0 -32 q10 -16 0 -32" />
-        </g>
-      </g>
-    </svg>
-  );
-}
-
-function Grano({ x, y, giro }) {
-  return (
-    <g transform={`translate(${x} ${y}) rotate(${giro})`}>
-      <ellipse rx="9" ry="13" fill="#9a6a45" />
-      <path d="M-1 -11 C 4 -4 -4 4 1 11" fill="none" stroke="#3d2a1f" strokeWidth="2" strokeLinecap="round" />
-    </g>
+      // Apenas se conoce la duración, se ubica en el cuadro del scroll actual
+      onLoadedMetadata={(evento) => {
+        evento.currentTarget.currentTime = segundoDelVideo(progreso, evento.currentTarget.duration);
+      }}
+      className={ESTILO_VIDEO}
+    />
   );
 }
