@@ -41,7 +41,8 @@ E-commerce de **café en bolsa** con variantes, más una línea chica de **acces
   2. ¿Te gusta que sea ácido? Poco / Algo / Mucho → acidez.
   3. ¿Cómo lo tomás? Solo / Con leche → con leche suma a los de más cuerpo.
   4. ¿Cómo lo preparás? Espresso / Moka / Filtro o V60 / Prensa francesa / Lo muelo yo → **molienda sugerida**.
-- Hay que responder las 4 para confirmar (el error dice cuáles faltan). Aparecen 3 cafés con % de coincidencia, motivos y molienda sugerida. Si cambia una respuesta después de confirmar, los resultados se actualizan solos; "Empezar de nuevo" reinicia todo.
+- **Una pregunta por vez** (rediseño de octubre): tarjeta en dos tonos, a la izquierda los 4 pasos con la respuesta elegida (se puede volver a cualquiera) y a la derecha la pregunta actual con opciones grandes, cada una con ícono (`IconoOpcion.js`) y una frase (`detalle` en `PREGUNTAS`). Con mouse o dedo avanza solo al elegir; con teclado (flechas) se avanza con "Siguiente".
+- Hay que responder las 4 para confirmar (el error dice cuáles faltan y lleva a la primera sin responder). El resultado muestra el café recomendado en grande con su foto, % de coincidencia, motivos, molienda sugerida y agregar al carrito, y otras dos opciones más chicas. Si cambia una respuesta después de confirmar, los resultados se actualizan solos; "Empezar de nuevo" reinicia todo.
 - Lógica **por reglas/puntaje (sin IA)** en `lib/recomendacion.js` (`validarRespuestas` y `recomendar`). Hoy corre en el navegador; en **E3** pasa al Route Handler `POST /api/recomendacion` y el formulario la consulta con `fetch` (formulario dinámico + validación + fetch).
 - En PR del carrito: botón para agregar el café recomendado con la molienda sugerida.
 
@@ -50,7 +51,7 @@ E-commerce de **café en bolsa** con variantes, más una línea chica de **acces
 - Paleta (definida una sola vez en `app/globals.css`): tostado `#2A1A12` (dominante: secciones oscuras, header, botones), crema `#F3EBDD` (fondo de lectura), kraft `#D6C1A0` (superficies), marrón `#634330` (texto secundario, AA sobre crema y kraft), cereza `#9A2E22` (único acento: solo descuentos y urgencia de stock).
 - Tipografía: una sola familia, **Archivo** (variable en ancho), con `next/font`. Títulos anchos y pesados como un sello; texto a 17 px; números de ancho fijo para datos y precios.
 - Evitar los "tics" de página generada: etiquetas en MAYÚSCULAS sobre cada título, textos unidos con "·", flechas "→" decorativas, numeración 01/02/03 si el contenido no es una secuencia.
-- **El movimiento vive solo en la portada:** el hero (`HeroPortada.js`), con la foto de las tres bolsas (`public/portada.webp`) que entra al cargar y se aleja apenas al bajar (animación de CSS atada al scroll, sin JavaScript), y después el recorrido del grano a la taza (`ProcesoScroll.js`, 3 pantallas con link para saltearlo): un video de 9 s en tres tomas (granos al molinillo, molienda al portafiltro, espresso al vaso de doble vidrio) que **avanza con el scroll** (`currentTime`), en lugar de reproducirse solo; cada toma coincide con su texto. Está en `public/video/proceso.mp4` (720 × 720, sin sonido, 2 MB, todos los cuadros independientes para que adelantar y retroceder sea fluido) y se descarga recién cuando la sección está cerca. Todo respeta "reducir movimiento": en ese caso se muestra una imagen fija del último cuadro y el video no se descarga. En el resto de la tienda solo hay microinteracciones (la bolsa se levanta al pasar el mouse por una tarjeta).
+- **El movimiento vive solo en la portada:** el hero (`HeroPortada.js`), con la foto de las tres bolsas (`public/portada.webp`) que entra al cargar y se aleja apenas al bajar (animación de CSS atada al scroll, sin JavaScript), y después el recorrido del grano a la taza (`ProcesoScroll.js`, 3 pantallas con link para saltearlo): un video de 9 s en tres tomas (granos al molinillo, molienda al portafiltro, espresso al vaso de doble vidrio) que **avanza con el scroll** (`currentTime`), en lugar de reproducirse solo; cada toma coincide con su texto. Está en `public/video/proceso.mp4` (720 × 720, sin sonido, 2 MB, todos los cuadros independientes para que adelantar y retroceder sea fluido) y se descarga recién cuando la sección está cerca. Todo respeta "reducir movimiento": en ese caso el video no avanza con el scroll, queda quieto en el último cuadro y tiene controles para reproducirlo si la persona quiere (no se descarga hasta que aprieta play). Ojo: en Windows, desactivar "Efectos de animación" activa "reducir movimiento" en el navegador. En el resto de la tienda solo hay microinteracciones (la bolsa se levanta al pasar el mouse por una tarjeta).
 - **Referencias del rediseño (octubre):** Fellow para la presentación del producto (imagen protagonista sobre fondo de estudio, tarjetas con poco texto), ORYZO para el movimiento de la portada (con moderación) y Cuervo Café y Café Registrado para la claridad comercial (qué se vende y cómo comprar desde la primera pantalla, beneficios a la vista).
 - **Fotos de producto (octubre):** generadas con IA (Higgsfield, GPT Image 2.5) a partir de una foto de referencia, para que todas parezcan de la misma sesión: bolsa kraft con cierre dentado y válvula, etiqueta del color del perfil (clara para frutales, marrón para equilibrados, tostado para intensos) y fondo de estudio crema. Están en Supabase Storage (1200 × 1200, WebP) y en `productos.imagen_url`; se cambian desde el panel admin.
 - **Packaging ilustrado** (`BolsaCafe.js`): un producto sin foto (por ejemplo, uno recién cargado desde el admin) se muestra como una bolsa kraft dibujada con su etiqueta. `ImagenProducto` la usa cuando `imagen_url` está vacío.
@@ -131,7 +132,7 @@ Se valora el **desarrollo continuo**: commits frecuentes y entregas alineadas al
 | 2 | E1: repo, CI (GitHub Actions), Vercel, preview por PR |
 | 3 | E2: landing semántica, responsive y accesible + vistas clave ✅ · Rediseño "Tostadero" + accesorios + carrito en el cliente (en curso) |
 | 4 | **E5 adelantado (lo pidió la cátedra):** Supabase (migraciones, seed, Auth, RLS) + panel admin CRUD. Junto con **E3**: login/registro contra Supabase con validación y fetch |
-| 5 | E3 (resto): contacto y cuestionario vía `POST /api/recomendacion` · E4: búsqueda/filtros + API interna (`/api/productos`) |
+| 5 | E3 (resto): contacto ✅ y cuestionario vía `POST /api/recomendacion` · E4: búsqueda/filtros + API interna (`/api/productos`) |
 | 6 | Margen / pulido de E3–E5 |
 | 7 | E6: checkout Mercado Pago sandbox, webhook (el carrito ya existe en el cliente) |
 | 8 | Tests (Playwright), "Mis órdenes", documentación |
@@ -159,7 +160,7 @@ Se hizo en PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (pa
 
 ## Próximas tareas
 - **PR `feat/email` (Resend):** email de confirmación con el código y el link de seguimiento al crear el pedido. Sin dominio propio, Resend solo le manda al dueño de la cuenta (alcanza para la demo).
-- E3 (resto): formulario de contacto y cuestionario vía `POST /api/recomendacion`.
+- E3 (resto): cuestionario vía `POST /api/recomendacion`. (El formulario de contacto ya está: `POST /api/contacto`, tabla `mensajes` y Mensajes en el admin.)
 - E4: búsqueda y filtros del catálogo + `GET /api/productos`.
 - Tests E2E con Playwright.
 

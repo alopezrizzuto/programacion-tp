@@ -1,4 +1,5 @@
 import FormularioSeguimiento from "./FormularioSeguimiento";
+import ConFotoPortada from "../components/ConFotoPortada";
 
 export const metadata = {
   title: "Seguí tu pedido",
@@ -7,12 +8,12 @@ export const metadata = {
 
 export default function SeguimientoPage() {
   return (
-    <div className="mx-auto max-w-xl px-4 py-16">
+    <ConFotoPortada>
       <h1 className="font-display text-5xl">Seguí tu pedido</h1>
       <p className="mt-3 text-marron">
         Ingresá el código que te dimos al comprar. Empieza con OC-, por ejemplo OC-7K2M9QXHPA.
       </p>
       <FormularioSeguimiento />
-    </div>
+    </ConFotoPortada>
   );
 }
