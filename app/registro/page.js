@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import FormularioRegistro from "./FormularioRegistro";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { destinoSeguro } from "@/lib/auth";
+import ConFotoPortada from "../components/ConFotoPortada";
 
 export const metadata = {
   title: "Crear cuenta",
@@ -18,7 +19,7 @@ export default async function RegistroPage({ searchParams }) {
   if (user) redirect(destino);
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
+    <ConFotoPortada>
       <h1 className="font-display text-5xl">Crear cuenta</h1>
       <ul className="mt-4 list-disc space-y-1 pl-5 text-marron">
         <li>Seguí el estado de tus pedidos.</li>
@@ -33,6 +34,6 @@ export default async function RegistroPage({ searchParams }) {
           Ingresá
         </Link>
       </p>
-    </div>
+    </ConFotoPortada>
   );
 }

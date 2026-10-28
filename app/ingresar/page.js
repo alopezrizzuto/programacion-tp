@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import FormularioIngreso from "./FormularioIngreso";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { destinoSeguro } from "@/lib/auth";
+import ConFotoPortada from "../components/ConFotoPortada";
 
 export const metadata = {
   title: "Ingresar",
@@ -20,7 +21,7 @@ export default async function IngresarPage({ searchParams }) {
   if (user) redirect(destino);
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
+    <ConFotoPortada>
       <h1 className="font-display text-5xl">Ingresar</h1>
       <p className="mt-3 text-marron">Entrá para seguir tus pedidos y comprar más rápido.</p>
 
@@ -32,6 +33,6 @@ export default async function IngresarPage({ searchParams }) {
           Creá una
         </Link>
       </p>
-    </div>
+    </ConFotoPortada>
   );
 }
