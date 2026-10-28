@@ -9,34 +9,33 @@ const BENEFICIOS = [
   `${PROMOS.descuentoTransferencia}% OFF por transferencia`,
 ];
 
-// Primera pantalla de la portada: qué vende Origen y cómo comprar, sin esperar ninguna animación.
-// Solo la foto tiene movimiento: entra una vez al cargar (entrar-bolsa) y se aleja apenas al bajar (hero-bolsas, en globals.css).
-export default function HeroPortada({ cafes }) {
+// Segundo bloque de la portada, después del hero: las tres bolsas (una por perfil) y cómo comprar.
+// Sigue el fondo oscuro del hero, así el paso de uno a otro se siente continuo.
+// La foto aparece a medida que entra en pantalla (revelar-bolsas, en globals.css).
+export default function PresentacionCafes({ cafes }) {
   return (
-    <section aria-labelledby="titulo-portada" className="relative overflow-hidden bg-tostado text-crema">
+    <section aria-labelledby="titulo-presentacion" className="relative overflow-hidden bg-tostado text-crema">
       {/* Luz cálida detrás de las bolsas */}
       <div
         aria-hidden="true"
         className="absolute -right-40 top-1/2 h-[42rem] w-[42rem] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,#6b4630_0%,transparent_68%)] opacity-70"
       />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-4 pb-12 pt-10 sm:px-6 lg:min-h-[min(46rem,calc(100svh-6.25rem))] lg:grid-cols-2 lg:gap-12 lg:py-12">
-        {/* El texto aparece de inmediato (sin animación): es lo primero que hay que poder leer */}
+      <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-12 lg:py-24">
         <div>
-          <p className="text-kraft">Tostado cada semana en Buenos Aires</p>
-          <h1 id="titulo-portada" className="mt-3 font-display text-5xl leading-[0.92] sm:text-7xl">
-            Café de especialidad, recién tostado
-          </h1>
+          <h2 id="titulo-presentacion" className="font-display text-5xl leading-[0.92] sm:text-6xl">
+            Recién tostado, en tu puerta
+          </h2>
           <p className="mt-6 max-w-lg text-lg text-kraft">
             {cafes.length} cafés de altura en bolsas de 250 g a 1 kg, en grano o molidos para tu cafetera. Te llegan con
             menos de 7 días de tostado.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/productos" className="boton bg-crema text-tostado hover:bg-kraft">
-              Comprar café
+              Ver todos los cafés
             </Link>
             <a href="#elegi" className="boton-secundario text-crema">
-              Elegí tu café ideal
+              Hacer el test
             </a>
           </div>
           <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm text-kraft">
@@ -53,14 +52,13 @@ export default function HeroPortada({ cafes }) {
 
         {/* Foto de las tres bolsas (una por perfil). Decorativa: los cafés se nombran en la grilla de abajo.
             La máscara funde los bordes de la foto con el fondo oscuro, para que no se vea el recuadro. */}
-        <div className="hero-bolsas relative mx-auto w-full max-w-xl lg:max-w-none">
+        <div className="revelar-bolsas relative mx-auto w-full max-w-xl lg:max-w-none">
           <Image
             src={fotoPortada}
             alt=""
-            priority
             sizes="(min-width: 1024px) 50vw, (min-width: 640px) 36rem, 100vw"
             placeholder="blur"
-            className="h-auto w-full animate-[entrar-bolsa_0.9s_cubic-bezier(0.2,0.8,0.2,1)_both] [mask-image:radial-gradient(ellipse_closest-side,black_62%,transparent_100%)]"
+            className="h-auto w-full [mask-image:radial-gradient(ellipse_closest-side,black_62%,transparent_100%)]"
           />
         </div>
       </div>

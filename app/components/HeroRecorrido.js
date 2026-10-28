@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 
-// Recorrido de la portada (va después del hero): un video del grano a la taza que avanza con el scroll.
-// La sección mide 3 pantallas de alto; adentro, una "ventana" fija (sticky) muestra el video y los textos.
+// Hero de la portada: lo primero que se ve. Un video del grano a la taza que avanza con el scroll
+// (como en las páginas de referencia): no se reproduce solo, cada vez que bajás pasa un poco más.
+// La sección mide 3,5 pantallas de alto; adentro, una "ventana" fija (sticky) muestra el video y los textos.
 // "progreso" va de 0 (recién llegás) a 1 (terminaste de recorrerla): mueve el video y decide qué texto se ve.
 
 const PASOS = [
@@ -21,19 +23,19 @@ const PASOS = [
   },
 ];
 
-// Tramos del recorrido: [inicio, fin] de cada paso dentro del progreso total.
-// El video tiene tres tomas de unos 3 segundos, así que cada texto coincide con su toma.
-const TRAMOS = [
-  [0.1, 0.37],
-  [0.37, 0.64],
-  [0.64, 0.9],
-];
+// El video (public/video/proceso.mp4) tiene cuatro tomas: granos al molinillo, molienda del molinillo al
+// portafiltro, portafiltro a la cafetera y espresso de la cafetera al vaso. Cada paso del texto empieza en un segundo del video.
+const DURACION_VIDEO = 11.79;
+const INICIO_PASOS = [0, 3.5, 6.75]; // segundos: granos, molienda, cafetera y taza
+
+// Tramo del scroll en el que avanza el video: antes se ve la presentación y después el cierre
+const INICIO = 0.08;
+const FIN = 0.92;
 
 const limitar = (valor, min = 0, max = 1) => Math.min(max, Math.max(min, valor));
 
-// En qué segundo del video corresponde estar según el progreso del scroll.
-// Arranca un poco después de entrar (0.05) y termina un poco antes del final (0.95).
-const segundoDelVideo = (progreso, duracion) => limitar((progreso - 0.05) / 0.9) * (duracion - 0.05);
+// En qué segundo del video corresponde estar según el progreso del scroll
+const segundoDelVideo = (progreso, duracion) => limitar((progreso - INICIO) / (FIN - INICIO)) * (duracion - 0.05);
 
 // Lee la preferencia del sistema "reducir movimiento" y se entera si cambia
 function suscribirMovimiento(avisar) {
@@ -43,7 +45,7 @@ function suscribirMovimiento(avisar) {
 }
 const leerMovimiento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export default function ProcesoScroll() {
+export default function HeroRecorrido() {
   const seccion = useRef(null);
   const [progresoScroll, setProgresoScroll] = useState(0);
   const sinMovimiento = useSyncExternalStore(suscribirMovimiento, leerMovimiento, () => false);
@@ -72,15 +74,17 @@ export default function ProcesoScroll() {
     };
   }, []);
 
-  const pasoActivo = TRAMOS.findIndex(([inicio, fin]) => progreso >= inicio && progreso < fin);
-  const enIntro = progreso < TRAMOS[0][0];
-  const enFinal = progreso >= TRAMOS[2][1];
+  const enIntro = progreso < INICIO;
+  const enFinal = progreso >= FIN;
+  const segundo = segundoDelVideo(progreso, DURACION_VIDEO);
+  // El paso activo es el último cuyo inicio ya pasó (y solo mientras avanza el video)
+  const pasoActivo = enIntro || enFinal ? -1 : INICIO_PASOS.findLastIndex((inicio) => segundo >= inicio);
 
   return (
     <section
       ref={seccion}
-      aria-labelledby="titulo-recorrido"
-      className="relative h-[300vh] bg-tostado text-crema motion-reduce:h-auto"
+      aria-labelledby="titulo-portada"
+      className="relative h-[350vh] bg-tostado text-crema motion-reduce:h-auto"
     >
       <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden motion-reduce:static motion-reduce:h-auto">
         <div className="mx-auto grid h-full max-w-7xl grid-rows-[minmax(0,1fr)] lg:grid-cols-[1fr_1.1fr] motion-reduce:grid-rows-none">
@@ -88,13 +92,24 @@ export default function ProcesoScroll() {
           <div className="relative z-10 flex h-full items-end px-4 pb-10 sm:px-6 lg:items-center lg:pb-0 motion-reduce:items-start motion-reduce:py-16">
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-tostado via-tostado to-transparent lg:hidden motion-reduce:hidden" />
             <div className="relative grid w-full [grid-template-areas:'capa'] motion-reduce:block motion-reduce:space-y-10">
+              {/* Presentación: qué vende Origen y cómo comprar, sin tener que recorrer el video */}
               <Panel visible={enIntro || sinMovimiento}>
-                <h2 id="titulo-recorrido" className="font-display text-5xl leading-[0.95] sm:text-6xl">
-                  Del grano a tu taza
-                </h2>
-                <p className="mt-6 max-w-md text-lg text-kraft">
-                  Así llega cada bolsa a tu casa.{!sinMovimiento && " Seguí bajando."}
+                <p className="text-kraft">Tostado cada semana en Buenos Aires</p>
+                <h1 id="titulo-portada" className="mt-3 font-display text-[2.75rem] leading-[0.92] sm:text-7xl">
+                  Café de especialidad, del grano a tu taza
+                </h1>
+                <p className="mt-5 max-w-md text-lg text-kraft">
+                  Seis orígenes de altura, en grano o molidos para tu cafetera.
+                  {!sinMovimiento && " Bajá y mirá cómo llega a tu casa."}
                 </p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Link href="/productos" tabIndex={enIntro || sinMovimiento ? 0 : -1} className="boton bg-crema text-tostado hover:bg-kraft">
+                    Comprar café
+                  </Link>
+                  <a href="#elegi" tabIndex={enIntro || sinMovimiento ? 0 : -1} className="boton-secundario text-crema">
+                    Elegí tu café ideal
+                  </a>
+                </div>
               </Panel>
 
               <ol className="contents motion-reduce:block motion-reduce:space-y-8">
@@ -200,7 +215,7 @@ function VideoProceso({ progreso, sinMovimiento, seccion }) {
         muted
         playsInline
         preload="none"
-        aria-label="Video del recorrido: granos al molinillo, molienda al portafiltro y espresso en el vaso"
+        aria-label="Video del recorrido: granos al molinillo, molienda al portafiltro, portafiltro a la cafetera y espresso en el vaso"
         className="h-full w-full rounded-3xl object-cover"
       />
     );

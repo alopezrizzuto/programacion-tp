@@ -1,6 +1,6 @@
 import Link from "next/link";
-import HeroPortada from "./components/HeroPortada";
-import ProcesoScroll from "./components/ProcesoScroll";
+import HeroRecorrido from "./components/HeroRecorrido";
+import PresentacionCafes from "./components/PresentacionCafes";
 import TarjetaCafe from "./components/TarjetaCafe";
 import TarjetaAccesorio from "./components/TarjetaAccesorio";
 import BeneficiosCompra from "./components/BeneficiosCompra";
@@ -25,10 +25,10 @@ export default async function Home() {
 
   return (
     <>
-      {/* 1. Qué es Origen y cómo comprar, en la primera pantalla */}
-      <HeroPortada cafes={cafes} />
-      {/* 2. Recorrido animado del grano a la taza (único momento con scroll narrativo) */}
-      <ProcesoScroll />
+      {/* 1. Hero: qué es Origen y cómo comprar, y al bajar el video del grano a la taza (único scroll narrativo) */}
+      <HeroRecorrido />
+      {/* 2. Las tres bolsas y cómo comprar */}
+      <PresentacionCafes cafes={cafes} />
 
       {/* 3. Los productos, a la vista */}
       <section id="cafes" aria-labelledby="titulo-cafes" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:py-28">
