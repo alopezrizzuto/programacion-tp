@@ -7,7 +7,6 @@ import TarjetaCafe from "../../components/TarjetaCafe";
 import TarjetaAccesorio from "../../components/TarjetaAccesorio";
 import FechaEntrega from "../../components/FechaEntrega";
 import Garantias from "../../components/Garantias";
-import VideosClientes from "../../components/VideosClientes";
 import Resenas from "../../components/Resenas";
 import BarraEstadisticas from "../../components/BarraEstadisticas";
 import PreguntasFrecuentes from "../../components/PreguntasFrecuentes";
@@ -96,7 +95,6 @@ export default async function CafePage({ params }) {
           <div className="mt-8 space-y-8 border-t border-marron/20 pt-8">
             <FechaEntrega />
             <Garantias compacta />
-            <VideosClientes />
           </div>
         </div>
       </div>
