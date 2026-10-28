@@ -154,7 +154,7 @@ export default function TestCafe({ cafes }) {
             </div>
 
             {/* key: al cambiar de pregunta se arma de nuevo, y entra con una transición corta */}
-            <fieldset key={pregunta.id} className="mt-8 animate-[entrar-texto_0.35s_ease-out_both]" aria-describedby={pregunta.ayuda ? `ayuda-${pregunta.id}` : undefined}>
+            <fieldset key={pregunta.id} className="mt-8 animate-[entrar-pregunta_0.35s_ease-out_both]" aria-describedby={pregunta.ayuda ? `ayuda-${pregunta.id}` : undefined}>
               <legend className="sr-only">{pregunta.titulo}</legend>
               <h3 ref={tituloRef} tabIndex={-1} className="font-display text-3xl leading-tight outline-none sm:text-4xl">
                 {pregunta.titulo}

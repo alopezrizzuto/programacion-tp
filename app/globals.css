@@ -79,28 +79,29 @@ body:has(dialog[open]) {
   }
 }
 
-/* Portada: las bolsas del hero entran una sola vez, al cargar */
-@keyframes entrar-bolsa {
+/* Test: cada pregunta entra con una transición corta (con reducir movimiento dura casi nada, ver abajo) */
+@keyframes entrar-pregunta {
   from {
     opacity: 0;
-    transform: translateY(56px);
+    transform: translateY(12px);
   }
 }
 
-/* Portada: al bajar, las bolsas se alejan apenas. Es una animación atada al scroll (sin JavaScript):
-   solo en navegadores que la soportan y si la persona no pidió reducir el movimiento */
-@keyframes alejar-bolsas {
-  to {
-    transform: translateY(12%) scale(0.92);
-    opacity: 0.5;
+/* Portada: la foto de las bolsas aparece a medida que entra en pantalla. Animación atada a la posición
+   del elemento en la pantalla (view), sin JavaScript: solo en navegadores que la soportan
+   y si la persona no pidió reducir el movimiento */
+@keyframes revelar-bolsas {
+  from {
+    opacity: 0.2;
+    transform: translateY(10%) scale(0.92);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: scroll()) {
-    .hero-bolsas {
-      animation: alejar-bolsas linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 90vh;
+  @supports (animation-timeline: view()) {
+    .revelar-bolsas {
+      animation: revelar-bolsas linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 45%;
     }
   }
 }
