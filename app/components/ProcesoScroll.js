@@ -189,10 +189,21 @@ function VideoProceso({ progreso, sinMovimiento, seccion }) {
     if (elemento?.duration) elemento.currentTime = segundoDelVideo(progreso, elemento.duration);
   }, [progreso]);
 
-  // Con "reducir movimiento" no hay video: queda la imagen del final (el espresso servido)
+  // Con "reducir movimiento" nada se mueve solo: el video queda quieto en el final (el espresso servido)
+  // y se reproduce únicamente si la persona aprieta play. preload="none": no se descarga hasta entonces.
   if (sinMovimiento) {
-    // eslint-disable-next-line @next/next/no-img-element -- es un cuadro del propio video, ya optimizado (13 KB)
-    return <img src="/video/proceso-final.webp" alt="" className={ESTILO_VIDEO} />;
+    return (
+      <video
+        src="/video/proceso.mp4"
+        poster="/video/proceso-final.webp"
+        controls
+        muted
+        playsInline
+        preload="none"
+        aria-label="Video del recorrido: granos al molinillo, molienda al portafiltro y espresso en el vaso"
+        className="h-full w-full rounded-3xl object-cover"
+      />
+    );
   }
 
   return (
