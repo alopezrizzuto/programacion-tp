@@ -49,6 +49,7 @@ En el **SQL Editor** de Supabase, ejecutar en orden el contenido de:
 3. `supabase/seed.sql`: los 6 cafés con sus 18 variantes, los 4 accesorios y las reseñas de ejemplo.
 4. `supabase/migrations/003_imagenes.sql`: bucket `productos` de Supabase Storage para las fotos (lectura pública, solo el admin sube o borra).
 5. `supabase/migrations/004_checkout.sql`: pedidos sin cuenta (código de seguimiento), datos de envío, medio de pago, montos y la función `confirmar_pago` (marca el pedido como pagado y descuenta el stock en una sola transacción).
+6. `supabase/migrations/005_mensajes.sql`: mensajes del formulario de contacto (solo el admin los lee).
 
 En el plan gratis, Supabase pausa el proyecto después de 7 días sin uso: el workflow `mantener-supabase.yml` hace una consulta diaria para evitarlo.
 
@@ -111,12 +112,22 @@ Para que el webhook funcione, Mercado Pago tiene que poder llegar a la URL: en V
 
 **La firma en el sandbox.** Con credenciales de prueba, el pago lo cobra la *cuenta vendedor de prueba* que crea Mercado Pago, y los avisos de pagos reales llegan firmados con la clave de esa cuenta, que no está disponible: la firma no coincide (la simulación del panel sí, porque la firma tu aplicación). Por eso, con `MERCADOPAGO_SANDBOX=true`, el webhook registra una advertencia y sigue. No es un agujero: lo que protege de verdad es que el pago se le consulta a Mercado Pago con nuestro token y solo se confirma si está aprobado, es de ese pedido y el monto coincide. Con credenciales reales, sin esa variable, la firma se exige siempre.
 
+## Contacto
+
+`/contacto` tiene un formulario (nombre, email, motivo y mensaje) con la misma forma de trabajar que los otros: validación compartida en `lib/validacion-contacto.js`, envío con `fetch` a `POST /api/contacto` y errores por campo. El servidor guarda el mensaje con la clave secreta en la tabla `mensajes` (no hay política de insert para visitantes). Para frenar spam sin dependencias tiene un campo trampa invisible: si viene completo, lo llenó un bot y se descarta en silencio.
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/contacto` | Guarda un mensaje. 400 con errores por campo. |
+| `PATCH /api/mensajes/:id` | Solo admin: marca un mensaje como leído o no (`{ leido }`). |
+
 ## Panel admin
 
 En `/admin` (link "Panel admin" en el menú de la cuenta) un usuario con `role = 'admin'` maneja la tienda sin tocar código:
 
 - **Resumen:** productos visibles, variantes sin stock, pedidos pagados para preparar y la lista de variantes para reponer.
 - **Pedidos:** filtros (para preparar, esperando pago, enviados, todos), detalle de productos y envío, y botones para confirmar el pago, marcar como enviado o entregado y cancelar.
+- **Mensajes:** lo que llega por el formulario de contacto, del más nuevo al más viejo, con los no leídos destacados, link para responder por email y botón para marcarlos como leídos.
 - **Productos:** todos los productos (también los ocultos), con el stock de cada variante editable en el lugar y un interruptor para mostrarlos u ocultarlos.
 - **Cargar y editar:** formulario de café o accesorio con sus variantes (peso o nombre, precio y stock) y la foto, que se sube a Supabase Storage.
 - **Borrar:** borra el producto con sus variantes y reseñas. Si ya tiene pedidos la base no lo permite, y conviene ocultarlo.
