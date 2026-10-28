@@ -1,12 +1,10 @@
 import Link from "next/link";
-import Campo from "../components/Campo";
+import FormularioContacto from "./FormularioContacto";
 
 export const metadata = {
   title: "Contacto",
   description: "Escribinos por pedidos, envíos o para que te ayudemos a elegir tu café.",
 };
-
-const MOTIVOS = ["Quiero ayuda para elegir un café", "Consulta sobre mi pedido", "Envíos", "Ventas por mayor", "Otro"];
 
 export default function ContactoPage() {
   return (
@@ -29,40 +27,13 @@ export default function ContactoPage() {
           <div>
             <dt className="font-semibold">¿Buscás tu café?</dt>
             <dd className="text-marron">
-              Hacé el <Link href="/#elegi" className="text-tostado underline">test de café ideal</Link>: son tres clics.
+              Hacé el <Link href="/#elegi" className="text-tostado underline">test de café ideal</Link>: son cuatro preguntas.
             </dd>
           </div>
         </dl>
       </div>
 
-      <form className="space-y-6 rounded-3xl bg-kraft/50 p-6 sm:p-10">
-        <Campo id="nombre" etiqueta="Nombre" autoComplete="name" />
-        <Campo id="email" etiqueta="Email" type="email" autoComplete="email" />
-        <div>
-          <label htmlFor="motivo" className="text-sm font-semibold">Motivo</label>
-          <select id="motivo" name="motivo" className="mt-2 w-full rounded-xl border border-marron/40 bg-crema px-4 py-3">
-            {MOTIVOS.map((motivo) => (
-              <option key={motivo}>{motivo}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="mensaje" className="text-sm font-semibold">Mensaje</label>
-          <textarea
-            id="mensaje"
-            name="mensaje"
-            rows={5}
-            className="mt-2 w-full rounded-xl border border-marron/40 bg-crema px-4 py-3"
-          />
-        </div>
-        <div>
-          {/* El envío del formulario (validación + fetch) se implementa en E3 */}
-          <button type="submit" disabled className="boton w-full">
-            Enviar mensaje
-          </button>
-          <p className="mt-2 text-center text-sm text-marron">El envío se habilita en la próxima etapa del proyecto.</p>
-        </div>
-      </form>
+      <FormularioContacto />
     </div>
   );
 }
