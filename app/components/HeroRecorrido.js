@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-// Hero de la portada: lo primero que se ve. Un video del grano a la taza que ocupa toda la pantalla
-// y avanza con el scroll (como en las páginas de referencia): no se reproduce solo, cada vez que bajás
-// pasa un poco más y si subís retrocede. La sección mide 4 pantallas de alto; adentro, una "ventana"
-// fija (sticky) muestra el video de fondo y los textos encima.
+// Hero de la portada: lo primero que se ve. Un video grande del grano a la taza que avanza con el scroll
+// (como en las páginas de referencia): no se reproduce solo, cada vez que bajás pasa un poco más
+// y si subís retrocede. La sección mide 7 pantallas de alto (así el recorrido no pasa demasiado rápido);
+// adentro, una "ventana" fija (sticky) muestra el video y los textos encima.
 // "progreso" va de 0 (recién llegás) a 1 (terminaste de recorrerla): mueve el video y decide qué texto se ve.
 
 const PASOS = [
@@ -30,8 +30,15 @@ const DURACION_VIDEO = 11.79;
 const INICIO_PASOS = [0, 3.5, 6.75]; // segundos: granos, molienda, cafetera y taza
 
 // Tramo del scroll en el que avanza el video: antes se ve la presentación y después el cierre
-const INICIO = 0.06;
-const FIN = 0.92;
+const INICIO = 0.05;
+const FIN = 0.93;
+
+// Suavizado: en cada cuadro de pantalla el video recorre esta fracción de lo que le falta para llegar
+// al segundo que marca el scroll. Más chico = más suave (y más lento para alcanzarlo).
+const SUAVIZADO = 0.1;
+// Tope: como mucho avanza 0,1 s de video por cuadro de pantalla (unas 6 veces la velocidad real),
+// así un scroll de golpe no saltea la historia
+const PASO_MAXIMO = 0.1;
 
 const limitar = (valor, min = 0, max = 1) => Math.min(max, Math.max(min, valor));
 
@@ -41,6 +48,8 @@ const segundoDelVideo = (progreso, duracion) => limitar((progreso - INICIO) / (F
 export default function HeroRecorrido() {
   const seccion = useRef(null);
   const video = useRef(null);
+  // El progreso se guarda en un estado (para los textos) y en una ref (para el bucle del video, que no re-renderiza)
+  const progresoActual = useRef(0);
   const [progreso, setProgreso] = useState(0);
 
   useEffect(() => {
@@ -49,7 +58,8 @@ export default function HeroRecorrido() {
       cuadro = 0;
       const caja = seccion.current.getBoundingClientRect();
       const recorrido = caja.height - window.innerHeight;
-      setProgreso(limitar(-caja.top / recorrido));
+      progresoActual.current = limitar(-caja.top / recorrido);
+      setProgreso(progresoActual.current);
     }
     // requestAnimationFrame: mide como máximo una vez por cuadro de pantalla
     function alScrollear() {
@@ -65,12 +75,28 @@ export default function HeroRecorrido() {
     };
   }, []);
 
-  // Cada vez que cambia el progreso, el video salta al cuadro que corresponde (hacia adelante o hacia atrás).
-  // Está codificado con todos los cuadros independientes, así cada salto se dibuja al instante.
+  // El video no salta directo al segundo que marca el scroll: en cada cuadro de pantalla se le acerca un poco.
+  // Así, aunque el scroll sea rápido, se ven todos los cuadros intermedios y la historia se entiende.
+  // Está codificado con todos los cuadros independientes, así cada salto (currentTime) se dibuja al instante.
   useEffect(() => {
-    const elemento = video.current;
-    if (elemento?.duration) elemento.currentTime = segundoDelVideo(progreso, elemento.duration);
-  }, [progreso]);
+    let cuadro = 0;
+    let segundoActual = 0;
+    function avanzar() {
+      const elemento = video.current;
+      if (elemento?.duration) {
+        const objetivo = segundoDelVideo(progresoActual.current, elemento.duration);
+        const falta = objetivo - segundoActual;
+        if (Math.abs(falta) > 0.01) {
+          segundoActual += limitar(falta * SUAVIZADO, -PASO_MAXIMO, PASO_MAXIMO);
+          // Si el navegador todavía está dibujando el salto anterior, no le pedimos otro
+          if (!elemento.seeking) elemento.currentTime = segundoActual;
+        }
+      }
+      cuadro = requestAnimationFrame(avanzar);
+    }
+    cuadro = requestAnimationFrame(avanzar);
+    return () => cancelAnimationFrame(cuadro);
+  }, []);
 
   const enIntro = progreso < INICIO;
   const enFinal = progreso >= FIN;
@@ -79,28 +105,28 @@ export default function HeroRecorrido() {
   const pasoActivo = enIntro || enFinal ? -1 : INICIO_PASOS.findLastIndex((inicio) => segundo >= inicio);
 
   return (
-    <section ref={seccion} aria-labelledby="titulo-portada" className="relative h-[400vh] bg-tostado text-crema">
+    <section ref={seccion} aria-labelledby="titulo-portada" className="relative h-[700vh] bg-tostado text-crema">
       <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden">
-        {/* Video de fondo, a pantalla completa. Decorativo: los textos ya cuentan lo que pasa.
+        {/* Video: el video es cuadrado. En la compu ocupa todo el alto, a la derecha, entero (sin recortar ni agrandar
+            de más, para que no pierda calidad); en el celular, la parte de arriba de la pantalla, de lado a lado.
+            La máscara funde sus bordes con el fondo. Decorativo: los textos ya cuentan lo que pasa.
             No se reproduce solo (sin autoPlay): lo mueve el scroll. El poster es el primer cuadro. */}
-        <video
-          ref={video}
-          src="/video/proceso.mp4"
-          poster="/video/proceso-inicio.webp"
-          muted
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-          // Apenas se conoce la duración, se ubica en el cuadro del scroll actual
-          onLoadedMetadata={(evento) => {
-            evento.currentTarget.currentTime = segundoDelVideo(progreso, evento.currentTarget.duration);
-          }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        {/* Sombra para que los textos se lean sobre el video: abajo en el celular, a la izquierda en la compu */}
+        <div className="absolute inset-x-0 top-0 h-[68%] lg:inset-x-auto lg:right-0 lg:aspect-square lg:h-full lg:max-w-[72%]">
+          <video
+            ref={video}
+            src="/video/proceso.mp4"
+            poster="/video/proceso-inicio.webp"
+            muted
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            className="h-full w-full object-cover [mask-image:linear-gradient(to_bottom,black_55%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent,black_30%)]"
+          />
+        </div>
+        {/* En el celular el texto queda sobre la parte de abajo del video: una sombra para que se lea */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-tostado from-15% via-tostado/75 to-tostado/10 lg:bg-gradient-to-r lg:from-tostado/90 lg:from-0% lg:via-tostado/40 lg:to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-tostado from-25% via-tostado/60 to-transparent lg:hidden"
         />
 
         {/* Textos: uno visible a la vez, según el paso */}
