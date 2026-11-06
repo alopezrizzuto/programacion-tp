@@ -67,7 +67,7 @@ Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
 - Al crear la orden, el servidor recalcula precios, stock, bundles, 10% OFF y envío con `armarOrden` (`lib/ordenes.js`, que reutiliza `calcularCarrito`): nunca confía en el total del navegador.
 
 ### Requisitos obligatorios
-- Catálogo con **búsqueda y filtrado**: perfil, tostado, acidez, cuerpo, origen, peso, rango de precio, con stock y búsqueda por texto (nombre, origen, notas).
+- Catálogo con **búsqueda y filtrado**: perfil, tostado, acidez, cuerpo, origen, peso, rango de precio, con stock y búsqueda por texto (nombre, origen, notas). ✅ Barra lateral en `/productos` (`FiltrosCatalogo.js`, casillas con forma de pastilla), filtros en la URL y `GET /api/productos` con los mismos filtros: las dos usan `lib/catalogo.js` (`leerFiltros` valida, `filtrarProductos` filtra). Acidez y cuerpo en tres niveles (baja 1–2, media 3, alta 4–5); origen por país (el blend entra en Brasil y Colombia).
 - **Carrito y checkout** con Mercado Pago (sandbox).
 - **Usuarios**: registro, login y vista "Mis órdenes" (`/cuenta`). Además se puede comprar sin cuenta y seguir el pedido con su código.
 - **API interna** (Route Handlers) para productos y órdenes.
@@ -132,7 +132,7 @@ Se valora el **desarrollo continuo**: commits frecuentes y entregas alineadas al
 | 2 | E1: repo, CI (GitHub Actions), Vercel, preview por PR |
 | 3 | E2: landing semántica, responsive y accesible + vistas clave ✅ · Rediseño "Tostadero" + accesorios + carrito en el cliente (en curso) |
 | 4 | **E5 adelantado (lo pidió la cátedra):** Supabase (migraciones, seed, Auth, RLS) + panel admin CRUD. Junto con **E3**: login/registro contra Supabase con validación y fetch |
-| 5 | E3 (resto): contacto ✅ y cuestionario vía `POST /api/recomendacion` · E4: búsqueda/filtros + API interna (`/api/productos`) |
+| 5 | E3 (resto): contacto ✅ y cuestionario vía `POST /api/recomendacion` · E4: búsqueda/filtros + API interna (`/api/productos`) ✅ |
 | 6 | Margen / pulido de E3–E5 |
 | 7 | E6: checkout Mercado Pago sandbox, webhook (el carrito ya existe en el cliente) |
 | 8 | Tests (Playwright), "Mis órdenes", documentación |
@@ -158,11 +158,14 @@ Se hizo en PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (pa
 6. ✅ Panel `/admin` (solo `role = admin`): resumen, lista con stock editable y visibilidad, alta/edición/borrado de cafés y accesorios con sus variantes, y fotos en Supabase Storage (`003_imagenes.sql`). API en `/api/productos`, `/api/variantes` y `/api/imagenes`.
 7. ✅ Checkout con Mercado Pago (E6): `/checkout` (compra sin cuenta), `POST /api/ordenes`, webhook `/api/webhooks/mercadopago` (firma HMAC + consulta del pago + `confirmar_pago`), `/seguimiento` por código y Pedidos en el admin (`004_checkout.sql`). Webhook probado en producción (`https://programacion-tp-black.vercel.app`). En el sandbox, Mercado Pago firma los avisos con la clave de la cuenta vendedor de prueba (no disponible): con `MERCADOPAGO_SANDBOX=true` la firma se saltea y la seguridad la da la consulta del pago a Mercado Pago (aprobado, del pedido y con el monto correcto).
 
-## Próximas tareas
-- **PR `feat/email` (Resend):** email de confirmación con el código y el link de seguimiento al crear el pedido. Sin dominio propio, Resend solo le manda al dueño de la cuenta (alcanza para la demo).
-- E3 (resto): cuestionario vía `POST /api/recomendacion`. (El formulario de contacto ya está: `POST /api/contacto`, tabla `mensajes` y Mensajes en el admin.)
-- E4: búsqueda y filtros del catálogo + `GET /api/productos`.
-- Tests E2E con Playwright.
+## Próximas tareas (plan de cierre, acordado en noviembre)
+Un PR por paso, en este orden:
+1. ✅ `feat/catalogo-filtros` (E4): búsqueda y filtros + `GET /api/productos`.
+2. `feat/api-recomendacion` (E3): el test pasa a `POST /api/recomendacion` con `fetch`. (El formulario de contacto ya está: `POST /api/contacto`, tabla `mensajes` y Mensajes en el admin.)
+3. `test/e2e`: tests E2E con Playwright corriendo en el CI (carrito, checkout, filtros, test, cuenta, admin, formularios, webhook).
+4. **Auditoría de seguridad** con la skill de Cloudflare que recomendó la cátedra (`npx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit --global`, después "security audit this codebase"). Deja el reporte fuera del repo (`~/security-audit-skill/programacion-tp/run-N`); los arreglos van en `fix/seguridad`, cada uno con su test, y el resumen al README.
+5. `docs/final`: README completo y guion de la demo.
+6. Opcionales (Agustín pidió hacerlos también): **PR `feat/email` (Resend)**, email de confirmación con el código y el link de seguimiento al crear el pedido (sin dominio propio, Resend solo le manda al dueño de la cuenta: alcanza para la demo); logo propio; borrar la rama vieja `chore/cambio-idea-cafe`.
 
 ## Convenciones de trabajo
 - **Nunca trabajar directo en `main`.** Una rama por tarea (`feat/landing`, `fix/filtros`) y PR hacia `main`.
