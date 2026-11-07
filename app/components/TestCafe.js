@@ -6,19 +6,23 @@ import ImagenProducto from "./ImagenProducto";
 import IconoOpcion from "./IconoOpcion";
 import { useCarrito } from "./carrito/ProveedorCarrito";
 import { MOLIENDAS, nombrePeso, obtenerPerfil } from "@/lib/productos";
-import { PREGUNTAS, recomendar, validarRespuestas } from "@/lib/recomendacion";
+import { PREGUNTAS, validarRespuestas } from "@/lib/recomendacion";
 import { formatearPrecio } from "@/lib/tienda";
 
 // Test "Elegí tu café ideal": una pregunta por vez, con el recorrido de pasos a la izquierda.
-// Estado: las respuestas ({ intensidad: "fuerte", ... }), en qué paso está y si ya confirmó.
-// Los resultados no se guardan: se calculan a partir de las respuestas, así
-// cambian solos si el usuario vuelve a un paso y elige otra opción.
-// "cafes" llega desde la página (Supabase) y es la lista entre la que se recomienda.
-export default function TestCafe({ cafes }) {
+// Estado: las respuestas ({ intensidad: "fuerte", ... }), en qué paso está, si ya confirmó
+// y los resultados. La recomendación la calcula el servidor (POST /api/recomendacion): acá se validan
+// las respuestas antes de enviarlas (para avisar al instante qué falta) y el servidor las vuelve a validar.
+// Después de confirmar, si el usuario cambia una respuesta se vuelve a consultar y los resultados se actualizan.
+export default function TestCafe() {
   const [respuestas, setRespuestas] = useState({});
   const [paso, setPaso] = useState(0);
   const [confirmado, setConfirmado] = useState(false);
+  const [resultados, setResultados] = useState(null);
+  const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
+  // El pedido en curso: si llega otro (la persona cambió una respuesta), el anterior se cancela
+  const pedido = useRef(null);
   const resultadosRef = useRef(null);
   const tituloRef = useRef(null);
   const avanceRef = useRef(null);
@@ -29,7 +33,6 @@ export default function TestCafe({ cafes }) {
   const pregunta = PREGUNTAS[paso];
   const esUltima = paso === PREGUNTAS.length - 1;
   const respondidas = PREGUNTAS.filter((p) => respuestas[p.id]).length;
-  const resultados = confirmado && !validarRespuestas(respuestas) ? recomendar(respuestas, cafes) : null;
 
   // Al cambiar de paso, el foco va al título de la pregunta (para teclado y lectores de pantalla).
   // No pasa al cargar la página: solo cuando la persona avanzó o volvió.
@@ -38,8 +41,47 @@ export default function TestCafe({ cafes }) {
     enfocar.current = false;
   }, [paso]);
 
-  // Si el componente se desmonta con un avance pendiente, se cancela
-  useEffect(() => () => clearTimeout(avanceRef.current), []);
+  // Si el componente se desmonta con un avance o un pedido pendiente, se cancelan
+  useEffect(
+    () => () => {
+      clearTimeout(avanceRef.current);
+      pedido.current?.abort();
+    },
+    [],
+  );
+
+  // Pide la recomendación al servidor. Devuelve true si salió bien.
+  async function consultar(respuestasAEnviar) {
+    pedido.current?.abort();
+    const controlador = new AbortController();
+    pedido.current = controlador;
+    setCargando(true);
+    setError(null);
+    try {
+      const respuesta = await fetch("/api/recomendacion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(respuestasAEnviar),
+        signal: controlador.signal,
+      });
+      const datos = await respuesta.json();
+      if (!respuesta.ok) {
+        setError(datos.error ?? "No pudimos calcular tu café. Probá de nuevo.");
+        setResultados(null);
+        return false;
+      }
+      setResultados(datos.resultados);
+      return true;
+    } catch (problema) {
+      // Cancelado porque llegó un pedido más nuevo: no es un error
+      if (problema.name === "AbortError") return false;
+      setError("No pudimos conectarnos. Revisá tu conexión y probá de nuevo.");
+      setResultados(null);
+      return false;
+    } finally {
+      if (pedido.current === controlador) setCargando(false);
+    }
+  }
 
   function irA(nuevoPaso) {
     clearTimeout(avanceRef.current);
@@ -51,15 +93,19 @@ export default function TestCafe({ cafes }) {
   // para que se vea la elección). Con el teclado (flechas) no: se avanza con "Siguiente".
   function elegir(opcionId) {
     setError(null);
-    setRespuestas((actuales) => ({ ...actuales, [pregunta.id]: opcionId }));
+    const nuevas = { ...respuestas, [pregunta.id]: opcionId };
+    setRespuestas(nuevas);
+    // Si ya vio sus resultados, se recalculan con la respuesta nueva
+    if (confirmado) consultar(nuevas);
     if (conPuntero.current && !esUltima) {
       clearTimeout(avanceRef.current);
       avanceRef.current = setTimeout(() => irA(paso + 1), 280);
     }
   }
 
-  function confirmar(evento) {
+  async function confirmar(evento) {
     evento.preventDefault();
+    // Validación en el navegador: avisa al instante qué falta, sin ir al servidor
     const problema = validarRespuestas(respuestas);
     setError(problema);
     if (problema) {
@@ -68,12 +114,17 @@ export default function TestCafe({ cafes }) {
       return;
     }
     setConfirmado(true);
-    requestAnimationFrame(() => resultadosRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    if (await consultar(respuestas)) {
+      requestAnimationFrame(() => resultadosRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
   }
 
   function reiniciar() {
+    pedido.current?.abort();
     setRespuestas({});
     setConfirmado(false);
+    setResultados(null);
+    setCargando(false);
     setError(null);
     irA(0);
   }
@@ -206,8 +257,8 @@ export default function TestCafe({ cafes }) {
                 Anterior
               </button>
               {esUltima ? (
-                <button type="submit" className="boton">
-                  {confirmado ? "Actualizar mi café" : "Ver mi café"}
+                <button type="submit" disabled={cargando} className="boton disabled:opacity-70">
+                  {cargando ? "Buscando tu café…" : confirmado ? "Actualizar mi café" : "Ver mi café"}
                 </button>
               ) : (
                 <button type="button" onClick={() => irA(paso + 1)} disabled={!respuestas[pregunta.id]} className="boton">
@@ -219,8 +270,17 @@ export default function TestCafe({ cafes }) {
         </form>
 
         {/* aria-live: el lector de pantalla anuncia cuando aparecen o cambian los resultados */}
-        <div ref={resultadosRef} aria-live="polite" className="scroll-mt-24">
-          {resultados && <Resultados resultados={resultados} />}
+        {/* aria-busy: mientras llega la respuesta del servidor, el lector de pantalla espera para anunciar */}
+        <div ref={resultadosRef} aria-live="polite" aria-busy={cargando} className={`scroll-mt-24 transition-opacity ${cargando ? "opacity-60" : ""}`}>
+          {resultados &&
+            (resultados.length > 0 ? (
+              <Resultados resultados={resultados} />
+            ) : (
+              <p className="mt-14 text-lg">
+                Ahora no tenemos cafés con stock. Volvé en unos días o{" "}
+                <Link href="/contacto" className="font-semibold underline underline-offset-4">escribinos</Link>.
+              </p>
+            ))}
         </div>
       </div>
     </section>
