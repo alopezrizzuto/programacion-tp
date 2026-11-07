@@ -1,6 +1,21 @@
 import { exigirAdmin, respuestaErrorBase, revalidarTienda } from "@/lib/admin";
 import { hayErrores } from "@/lib/auth";
+import { filtrarProductos, leerFiltros, paisesDeOrigen } from "@/lib/catalogo";
+import { obtenerProductos } from "@/lib/datos";
 import { normalizarProducto, validarProducto } from "@/lib/validacion-producto";
+
+// GET /api/productos: catálogo público con búsqueda y filtros (los mismos que la página /productos).
+// Ejemplo: /api/productos?perfil=frutal&peso=250&precioMax=25000&stock=1
+// Responde 400 con un mensaje por campo si algún filtro no es válido.
+export async function GET(request) {
+  const productos = await obtenerProductos();
+  const { filtros, errores } = leerFiltros(new URL(request.url).searchParams, { paises: paisesDeOrigen(productos) });
+  if (hayErrores(errores)) return Response.json({ errores }, { status: 400 });
+
+  // Las reseñas no van en el listado: se ven en la página de cada producto
+  const encontrados = filtrarProductos(productos, filtros).map(({ resenas: _resenas, ...producto }) => producto);
+  return Response.json({ total: encontrados.length, filtros, productos: encontrados });
+}
 
 // POST /api/productos: crea un producto con sus variantes (solo admin)
 export async function POST(request) {

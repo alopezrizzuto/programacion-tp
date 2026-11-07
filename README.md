@@ -65,6 +65,22 @@ En el plan gratis, Supabase pausa el proyecto después de 7 días sin uso: el wo
 
 **Seguridad (RLS):** cualquiera puede ver los productos activos, sus variantes y reseñas; solo un admin los modifica. Cada usuario ve únicamente su perfil y sus órdenes. Los pedidos los crea y actualiza solo el servidor, con la clave secreta. Un usuario puede cambiar su nombre, pero no su `role`.
 
+## Catálogo: búsqueda y filtros
+
+`/productos` tiene una barra lateral (en el celular, un botón "Filtros" que la despliega) para buscar por texto (nombre, origen y notas, sin importar tildes ni mayúsculas) y filtrar por perfil, tostado, acidez y cuerpo (baja 1–2, media 3, alta 4–5), país de origen (el blend aparece en Brasil y en Colombia), peso de la bolsa, rango de precio y solo con stock.
+
+- **Los filtros viven en la URL** (`/productos?perfil=frutal&acidez=alta&q=jazmin`): el link se puede compartir y al volver de un producto siguen puestos. Los que admiten varios valores se repiten (`?perfil=frutal&perfil=intenso`).
+- Es un **formulario GET** común: sin JavaScript funciona con el botón "Ver resultados". Con JavaScript cada cambio se aplica solo (la búsqueda por texto, cuando dejás de escribir) y la página se vuelve a armar en el servidor.
+- La página y la API usan **las mismas funciones** (`lib/catalogo.js`): `leerFiltros` valida (solo valores de la lista, precios enteros, mínimo menor que máximo, búsqueda de hasta 60 caracteres) y `filtrarProductos` filtra. Cada producto vuelve solo con las variantes que cumplen peso, precio y stock, así la tarjeta muestra el precio de lo que buscaste.
+- Los filtros propios del café (perfil, tostado, acidez, cuerpo, origen y peso) ocultan los accesorios; la búsqueda, el precio y el stock aplican a todo.
+- Accesibilidad: cada grupo es un `fieldset` con su `legend`, las opciones son casillas reales (se ven como pastillas y funcionan con Tab y espacio) y la cantidad de resultados se anuncia al lector de pantalla (`role="status"`).
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/productos` | Catálogo público con los mismos filtros que la página: `q`, `perfil`, `tostado`, `acidez`, `cuerpo` (`baja`, `media`, `alta`), `origen`, `peso` (`250`, `500`, `1000`), `precioMin`, `precioMax` y `stock=1`. Devuelve `{ total, filtros, productos }`; 400 con un mensaje por campo si algún filtro no es válido. |
+
+Ejemplo: `/api/productos?perfil=intenso&peso=1000&stock=1`.
+
 ## Cuentas de usuario
 
 Registro e ingreso con email y contraseña (Supabase Auth). El navegador nunca habla directo con Supabase Auth: los formularios validan y envían con `fetch` a la API propia, que vuelve a validar.
@@ -161,7 +177,9 @@ app/                 páginas (App Router) y componentes
   seguimiento/       búsqueda por código y página de cada pedido
   api/auth/          Route Handlers de la cuenta
   api/ordenes/, api/webhooks/mercadopago/   pedidos y avisos de pago
-  api/productos/, api/variantes/, api/imagenes/   Route Handlers del panel admin
+  productos/         catálogo con la barra de filtros (FiltrosCatalogo.js)
+  api/productos/     catálogo con filtros (GET, público) y alta, edición y borrado (solo admin)
+  api/variantes/, api/imagenes/   Route Handlers del panel admin
   components/        componentes compartidos (header, tarjetas, carrito, sesión, test…)
 proxy.js             renueva la sesión antes de las páginas que la usan
 lib/
@@ -173,6 +191,7 @@ lib/
   mercadopago.js     preferencia, consulta de pagos y verificación de la firma del webhook
   supabase/          clientes de Supabase: con la sesión del usuario (cookies) y con la clave secreta (solo servidor)
   datos.js           lecturas del catálogo desde Supabase
+  catalogo.js        búsqueda y filtros del catálogo: validación y filtrado (página y API)
   productos.js       perfiles, tostados, moliendas y helpers de producto
   tienda.js          promociones (bundles, transferencia, cuotas, envío gratis)
   carrito.js         cálculo puro del carrito (lo reutiliza el servidor al crear la orden)
@@ -184,7 +203,7 @@ supabase/
 
 ## Decisiones
 
-- **El catálogo se lee en el servidor** y las páginas se regeneran cada 5 minutos (`revalidate = 300`), así un cambio en la base aparece sin volver a desplegar.
+- **El catálogo se lee en el servidor** y las páginas se regeneran cada 5 minutos (`revalidate = 300`), así un cambio en la base aparece sin volver a desplegar. `/productos` es la excepción: depende de los filtros de la URL, así que se arma en cada visita.
 - **El carrito vive en el navegador** (`localStorage`) y guarda solo variante, molienda y cantidad, nunca precios: los totales se recalculan siempre con los precios de la base.
 - **La molienda no es una variante:** se elige al comprar y no cambia el precio ni el stock.
 - **Las reglas de negocio están en la base:** valores cerrados y rangos con `CHECK`, permisos con RLS.
