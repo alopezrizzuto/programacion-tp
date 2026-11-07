@@ -43,7 +43,7 @@ E-commerce de **café en bolsa** con variantes, más una línea chica de **acces
   4. ¿Cómo lo preparás? Espresso / Moka / Filtro o V60 / Prensa francesa / Lo muelo yo → **molienda sugerida**.
 - **Una pregunta por vez** (rediseño de octubre): tarjeta en dos tonos, a la izquierda los 4 pasos con la respuesta elegida (se puede volver a cualquiera) y a la derecha la pregunta actual con opciones grandes, cada una con ícono (`IconoOpcion.js`) y una frase (`detalle` en `PREGUNTAS`). Con mouse o dedo avanza solo al elegir; con teclado (flechas) se avanza con "Siguiente".
 - Hay que responder las 4 para confirmar (el error dice cuáles faltan y lleva a la primera sin responder). El resultado muestra el café recomendado en grande con su foto, % de coincidencia, motivos, molienda sugerida y agregar al carrito, y otras dos opciones más chicas. Si cambia una respuesta después de confirmar, los resultados se actualizan solos; "Empezar de nuevo" reinicia todo.
-- Lógica **por reglas/puntaje (sin IA)** en `lib/recomendacion.js` (`validarRespuestas` y `recomendar`). Hoy corre en el navegador; en **E3** pasa al Route Handler `POST /api/recomendacion` y el formulario la consulta con `fetch` (formulario dinámico + validación + fetch).
+- Lógica **por reglas/puntaje (sin IA)** en `lib/recomendacion.js` (`validarRespuestas` y `recomendar`). ✅ **E3:** `recomendar` corre en el Route Handler `POST /api/recomendacion` (solo cafés con stock); el formulario valida en el navegador con `validarRespuestas`, consulta con `fetch` (botón "Buscando tu café…", `aria-busy`, mensajes si falla el servidor o la red) y, si cambia una respuesta, vuelve a consultar cancelando el pedido anterior (`AbortController`).
 - En PR del carrito: botón para agregar el café recomendado con la molienda sugerida.
 
 ### Identidad visual: "Tostadero"
@@ -132,7 +132,7 @@ Se valora el **desarrollo continuo**: commits frecuentes y entregas alineadas al
 | 2 | E1: repo, CI (GitHub Actions), Vercel, preview por PR |
 | 3 | E2: landing semántica, responsive y accesible + vistas clave ✅ · Rediseño "Tostadero" + accesorios + carrito en el cliente (en curso) |
 | 4 | **E5 adelantado (lo pidió la cátedra):** Supabase (migraciones, seed, Auth, RLS) + panel admin CRUD. Junto con **E3**: login/registro contra Supabase con validación y fetch |
-| 5 | E3 (resto): contacto ✅ y cuestionario vía `POST /api/recomendacion` · E4: búsqueda/filtros + API interna (`/api/productos`) ✅ |
+| 5 | E3 (resto): contacto ✅ y cuestionario vía `POST /api/recomendacion` ✅ · E4: búsqueda/filtros + API interna (`/api/productos`) ✅ |
 | 6 | Margen / pulido de E3–E5 |
 | 7 | E6: checkout Mercado Pago sandbox, webhook (el carrito ya existe en el cliente) |
 | 8 | Tests (Playwright), "Mis órdenes", documentación |
@@ -161,7 +161,7 @@ Se hizo en PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (pa
 ## Próximas tareas (plan de cierre, acordado en noviembre)
 Un PR por paso, en este orden:
 1. ✅ `feat/catalogo-filtros` (E4): búsqueda y filtros + `GET /api/productos`.
-2. `feat/api-recomendacion` (E3): el test pasa a `POST /api/recomendacion` con `fetch`. (El formulario de contacto ya está: `POST /api/contacto`, tabla `mensajes` y Mensajes en el admin.)
+2. ✅ `feat/api-recomendacion` (E3): el test pasa a `POST /api/recomendacion` con `fetch`. (El formulario de contacto ya está: `POST /api/contacto`, tabla `mensajes` y Mensajes en el admin.)
 3. `test/e2e`: tests E2E con Playwright corriendo en el CI (carrito, checkout, filtros, test, cuenta, admin, formularios, webhook).
 4. **Auditoría de seguridad** con la skill de Cloudflare que recomendó la cátedra (`npx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit --global`, después "security audit this codebase"). Deja el reporte fuera del repo (`~/security-audit-skill/programacion-tp/run-N`); los arreglos van en `fix/seguridad`, cada uno con su test, y el resumen al README.
 5. `docs/final`: README completo y guion de la demo.

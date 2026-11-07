@@ -71,7 +71,7 @@ export default async function Home() {
       <BeneficiosCompra />
 
       {/* 5. Ayuda para elegir */}
-      <TestCafe cafes={cafes} />
+      <TestCafe />
 
       {/* 6. Por qué Origen: comparación con el café de góndola */}
       <section aria-labelledby="titulo-diferencia" className="bg-tostado text-crema">

@@ -137,6 +137,21 @@ Para que el webhook funcione, Mercado Pago tiene que poder llegar a la URL: en V
 | `POST /api/contacto` | Guarda un mensaje. 400 con errores por campo. |
 | `PATCH /api/mensajes/:id` | Solo admin: marca un mensaje como leído o no (`{ leido }`). |
 
+## Test "Elegí tu café ideal"
+
+En la portada (`#elegi`), cuatro preguntas de a una: intensidad, acidez, si lo toma con leche y cómo lo prepara. La recomendación es por reglas y puntaje, sin IA (`lib/recomendacion.js`), y la calcula el servidor:
+
+- **En el navegador** (`app/components/TestCafe.js`), `validarRespuestas` avisa al instante qué preguntas faltan y lleva a la primera sin responder, sin ir al servidor.
+- **Con `fetch`**, las respuestas van a `POST /api/recomendacion`, que las vuelve a validar, lee los cafés de Supabase y devuelve los 3 que mejor encajan.
+- Mientras espera, el botón dice "Buscando tu café…" y los resultados quedan con `aria-busy`. Si el servidor falla o no hay conexión, se muestra un mensaje y se puede reintentar.
+- Si la persona cambia una respuesta después de ver los resultados, se vuelve a consultar y el pedido anterior se cancela (`AbortController`), así nunca se muestra una respuesta vieja.
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/recomendacion` | Recibe `{ intensidad, acidez, leche, metodo }` y devuelve `{ resultados }`: los 3 cafés con stock que mejor encajan, cada uno con su `coincidencia` (%), los `motivos` y la `molienda` sugerida. 400 con `{ error }` si falta una respuesta o alguna no es una de las opciones. |
+
+Ejemplo: `{ "intensidad": "fuerte", "acidez": "poco", "leche": "con-leche", "metodo": "espresso" }` recomienda Brasil Cerrado y Blend Espresso, molidos finos.
+
 ## Panel admin
 
 En `/admin` (link "Panel admin" en el menú de la cuenta) un usuario con `role = 'admin'` maneja la tienda sin tocar código:
@@ -180,6 +195,7 @@ app/                 páginas (App Router) y componentes
   productos/         catálogo con la barra de filtros (FiltrosCatalogo.js)
   api/productos/     catálogo con filtros (GET, público) y alta, edición y borrado (solo admin)
   api/variantes/, api/imagenes/   Route Handlers del panel admin
+  api/recomendacion/ el test "Elegí tu café ideal" (POST)
   components/        componentes compartidos (header, tarjetas, carrito, sesión, test…)
 proxy.js             renueva la sesión antes de las páginas que la usan
 lib/
@@ -195,7 +211,7 @@ lib/
   productos.js       perfiles, tostados, moliendas y helpers de producto
   tienda.js          promociones (bundles, transferencia, cuotas, envío gratis)
   carrito.js         cálculo puro del carrito (lo reutiliza el servidor al crear la orden)
-  recomendacion.js   lógica del test "Elegí tu café ideal"
+  recomendacion.js   preguntas, validación (navegador y servidor) y puntaje del test "Elegí tu café ideal"
 supabase/
   migrations/        esquema y seguridad en SQL
   seed.sql           datos iniciales
@@ -208,7 +224,7 @@ supabase/
 - **La molienda no es una variante:** se elige al comprar y no cambia el precio ni el stock.
 - **Las reglas de negocio están en la base:** valores cerrados y rangos con `CHECK`, permisos con RLS.
 - **Diseño:** el producto es protagonista (imagen grande sobre fondo de estudio, tarjetas con poco texto) y el movimiento vive solo en la portada: el hero interactivo es un video grande del grano a la taza que avanza con el scroll (con suavizado, para que un scroll rápido no saltee la historia) (`app/components/HeroRecorrido.js` y `public/video/proceso.mp4`) y debajo aparece la foto de las tres bolsas (`PresentacionCafes.js`). Todo respeta "reducir movimiento". Las fotos de producto y la del hero se generaron con IA a partir de una misma foto de referencia (misma bolsa, luz y fondo); un producto sin foto se muestra con una bolsa kraft ilustrada (`app/components/BolsaCafe.js`).
-- **Una sola validación para el navegador y el servidor** (`lib/auth.js`, `lib/validacion-producto.js`, `lib/validacion-checkout.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
+- **Una sola validación para el navegador y el servidor** (`lib/auth.js`, `lib/validacion-producto.js`, `lib/validacion-checkout.js`, `lib/validacion-contacto.js`, `lib/recomendacion.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
 - **Se compra sin cuenta**, con un código de seguimiento: menos pasos para comprar. La clave secreta de Supabase se usa solo en el servidor, para lo que no depende de una sesión (crear pedidos, el webhook y el seguimiento por código).
 
 El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), y el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md).
