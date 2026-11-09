@@ -1,5 +1,5 @@
 import { crearClienteSecreto } from "@/lib/supabase/secreto";
-import { firmaValida, obtenerPago } from "@/lib/mercadopago";
+import { decidirPago, firmaValida, obtenerPago } from "@/lib/mercadopago";
 import { revalidarTienda } from "@/lib/admin";
 
 const LISTO = () => new Response(null, { status: 200 });
@@ -49,14 +49,10 @@ export async function POST(request) {
     .select("id, estado, total")
     .eq("codigo", pago.external_reference)
     .maybeSingle();
-  if (!orden) return LISTO(); // no es un pedido nuestro
+  // Qué hacer según el estado y el monto del pago (lib/mercadopago.js, con tests unitarios)
+  const { accion, motivo } = decidirPago(pago, orden);
 
-  if (pago.status === "approved") {
-    // Si el monto cobrado no coincide con el pedido, no se confirma (alguien pudo alterar el pago)
-    if (Math.round(pago.transaction_amount) !== orden.total) {
-      console.error(`Pago ${pago.id}: cobró ${pago.transaction_amount} y el pedido ${pago.external_reference} es de ${orden.total}`);
-      return LISTO();
-    }
+  if (accion === "confirmar") {
     // Pagado + stock descontado, en una sola transacción (función de la migración 004)
     const { data: confirmado, error } = await supabase.rpc("confirmar_pago", {
       p_orden_id: orden.id,
@@ -67,15 +63,17 @@ export async function POST(request) {
       return Response.json({ error: "No se pudo confirmar." }, { status: 500 });
     }
     if (confirmado) revalidarTienda(); // cambió el stock: la tienda se regenera
-  } else if (["rejected", "cancelled"].includes(pago.status)) {
+  } else if (accion === "rechazar") {
     // Solo si seguía pendiente: un aviso viejo de rechazo no pisa un pago aprobado después
     await supabase
       .from("ordenes")
       .update({ estado: "rechazada", mp_payment_id: String(pago.id) })
       .eq("id", orden.id)
       .eq("estado", "pendiente");
+  } else if (orden) {
+    // Monto distinto: se registra para revisarlo. Pendiente o en proceso: no hay nada que hacer todavía.
+    console.warn(`Webhook, pedido ${pago.external_reference}: no se cambia (${motivo}).`);
   }
-  // "pending" o "in_process" (por ejemplo, pago en efectivo): el pedido sigue pendiente
 
   return LISTO();
 }
