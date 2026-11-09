@@ -10,9 +10,10 @@ Tienda online de café de especialidad: 6 cafés en bolsa (250 g, 500 g y 1 kg, 
 
 - **Next.js 16** (App Router) + **React 19** + **Tailwind CSS v4**, en JavaScript.
 - **Supabase**: base de datos Postgres con SQL directo (migraciones y seed versionados), Auth y RLS.
-- **Vercel** para el despliegue (con preview por PR) y **GitHub Actions** para CI (lint + build).
+- **Vercel** para el despliegue (con preview por PR) y **GitHub Actions** para CI (lint, tests unitarios, build y tests E2E).
 - **Mercado Pago** Checkout Pro (sandbox) con webhook.
-- Próximamente: email de confirmación (Resend) y **Playwright** (tests E2E).
+- **Tests:** unitarios con el runner de Node (`node:test`) y E2E con **Playwright**.
+- Próximamente: email de confirmación (Resend).
 
 ## Cómo correrlo
 
@@ -24,7 +25,7 @@ cp .env.example .env.local   # y completar los valores (ver abajo)
 npm run dev                  # http://localhost:3000
 ```
 
-Otros scripts: `npm run lint`, `npm run build` y `npm start`.
+Otros scripts: `npm run lint`, `npm run build`, `npm start`, `npm test` (unitarios) y `npm run test:e2e` (E2E, ver [Tests](#tests)).
 
 ### Variables de entorno
 
@@ -183,6 +184,53 @@ update public.profiles set role = 'admin'
 where id = (select id from auth.users where email = 'tu@email.com');
 ```
 
+## Tests
+
+Corren en cada PR y en cada push a `main` (GitHub Actions). Hay dos tipos:
+
+**Unitarios** (`tests/unit/`, `npm test`): prueban la lógica pura de `lib/` con el runner que trae Node (`node:test`), sin base ni navegador, en menos de un segundo. Usan un catálogo chico y fijo (`catalogo-de-prueba.js`) para que cada cuenta se pueda verificar a mano.
+
+| Archivo | Qué prueba |
+|---|---|
+| `carrito.test.js` | Bundles (por café y peso, sumando moliendas), envío gratis desde $100.000, 10% OFF por transferencia. |
+| `ordenes.test.js` | `armarOrden`: el precio sale del catálogo (no del navegador), stock sumando moliendas, cantidades y moliendas inválidas, código de seguimiento. |
+| `mercadopago.test.js` | Firma del webhook (correcta, de otro pago, con otra clave, mal armada) y `decidirPago` (aprobado, monto alterado, rechazado, pendiente). |
+| `catalogo.test.js` | Validación de filtros de la URL, búsqueda sin tildes, el blend en dos orígenes, filtrado de variantes. |
+| `recomendacion.test.js` | Validación de respuestas y que cada perfil de persona reciba el café y la molienda esperados. |
+| `validaciones.test.js` | Registro, ingreso, redirección segura después de ingresar, checkout y contacto. |
+| `entrega.test.js` | Fecha de entrega: corte de las 14:00, fines de semana y la hora de Argentina. |
+
+**E2E** (`tests/e2e/`, `npm run test:e2e`): Playwright levanta la tienda (build de producción) y la usa en un Chrome real, como una persona.
+
+| Archivo | Qué prueba |
+|---|---|
+| `tienda.spec.js` | Portada, filtros en la URL, búsqueda vacía, filtro inválido, peso sin stock, 404 y que no haya scroll horizontal en el celular. |
+| `test-cafe.spec.js` | El test de la portada: el `fetch` a la API, el resultado, agregar con la molienda sugerida y la validación sin ir al servidor. |
+| `carrito.spec.js` | Agregar con molienda, bundle de 2 bolsas, que sobreviva a recargar (sin precios en `localStorage`), upsell y quitar. |
+| `checkout.spec.js` | Errores por campo, compra por transferencia de punta a punta (con el total verificado en la base) y seguimiento por código. |
+| `cuenta.spec.js` | Registro, email repetido, contraseña equivocada y que un pedido con sesión aparezca en Mis pedidos. |
+| `admin.spec.js` | Sin sesión o sin rol no se entra (404 en la página, 403 en la API); el admin edita stock, crea y borra un café y confirma un pago (que descuenta el stock). |
+| `contacto.spec.js` | Validación, mensaje guardado y el campo trampa contra bots. |
+| `api.spec.js` | `/api/productos`, `/api/recomendacion`, `/api/ordenes` (precio manipulado, stock, datos inválidos) y el webhook (sin firma, firma falsa, firma de otro pago, firma correcta). |
+
+**Base de prueba.** Los E2E crean pedidos, cuentas, mensajes y productos, así que usan un **proyecto de Supabase aparte**, nunca el de la tienda. Para armarlo:
+
+1. Crear otro proyecto en Supabase y ejecutar en su SQL Editor las migraciones `001` a `005` y el `seed.sql`.
+2. En Authentication → Sign In / Providers → Email, desactivar **Confirm email** (el test de registro entra directo).
+3. Crear `.env.e2e.local` con `E2E_SUPABASE_URL`, `E2E_SUPABASE_PUBLISHABLE_KEY` y `E2E_SUPABASE_SECRET_KEY` de ese proyecto. Para el CI: las dos primeras en GitHub → Actions → **Variables** y la secreta en **Secrets**.
+
+Antes de empezar, `tests/e2e/preparar.js` deja la base en un estado conocido: repone el stock del seed y crea (o actualiza) un admin y un cliente de prueba con una contraseña al azar por corrida. Al terminar, `tests/e2e/limpiar.js` borra todo lo que crearon los tests (se reconoce por el dominio de los emails y el prefijo `e2e-` de los productos). El servidor de los tests usa una clave de webhook inventada y ningún token de Mercado Pago: nunca se llama a su API.
+
+Para correrlos en la compu:
+
+```bash
+npx playwright install chromium   # una sola vez
+npm run test:e2e                  # build en .next-e2e + tests (unos minutos)
+npx playwright show-report        # el reporte, con capturas si algo falló
+```
+
+**Lo que se prueba a mano.** El pago en Mercado Pago (la redirección a Checkout Pro y la tarjeta de prueba) no se puede automatizar: se prueba en la demo con la [lista de "Probar un pago"](#probar-un-pago-sandbox). Lo que hace el webhook con cada pago sí está cubierto por los unitarios (`decidirPago`) y los E2E (la firma).
+
 ## Estructura
 
 ```
@@ -215,6 +263,10 @@ lib/
 supabase/
   migrations/        esquema y seguridad en SQL
   seed.sql           datos iniciales
+tests/
+  unit/              tests unitarios de lib/ (node --test)
+  e2e/               tests E2E con Playwright, y la preparación y limpieza de la base de prueba
+playwright.config.js cómo se levanta la tienda para los E2E (base de prueba, puerto 3100)
 ```
 
 ## Decisiones

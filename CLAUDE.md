@@ -105,7 +105,7 @@ Con **RLS**: el cliente solo ve sus órdenes; solo el admin modifica productos/v
 - **Mercado Pago** (Checkout Pro, sandbox + webhook)
 - **Vercel** (deploy, preview por PR, variables de entorno)
 - **GitHub Actions** (CI: lint + build; más adelante tests)
-- **Playwright** (tests E2E, semana 8)
+- **Tests:** unitarios con `node:test` (`tests/unit/`, `npm test`) y E2E con **Playwright** (`tests/e2e/`, `npm run test:e2e`), los dos en el CI. Los E2E corren contra un **proyecto de Supabase solo para tests** (claves `E2E_*` en `.env.e2e.local` y en GitHub Variables/Secrets), con build propio en `.next-e2e` y puerto 3100; `preparar.js` repone el stock y crea admin y cliente de prueba, `limpiar.js` borra lo creado. `package.json` tiene `"type": "module"` y los imports relativos de `lib/` llevan `.js` (Node los necesita para los unitarios).
 
 ## Rúbrica (hay que sacar EXCELENTE en todos los ítems, si no se desaprueba)
 
@@ -162,7 +162,7 @@ Se hizo en PRs: A `feat/supabase-base` (pasos 1–4), B `feat/autenticacion` (pa
 Un PR por paso, en este orden:
 1. ✅ `feat/catalogo-filtros` (E4): búsqueda y filtros + `GET /api/productos`.
 2. ✅ `feat/api-recomendacion` (E3): el test pasa a `POST /api/recomendacion` con `fetch`. (El formulario de contacto ya está: `POST /api/contacto`, tabla `mensajes` y Mensajes en el admin.)
-3. `test/e2e`: tests E2E con Playwright corriendo en el CI (carrito, checkout, filtros, test, cuenta, admin, formularios, webhook).
+3. ✅ `test/e2e`: tests E2E con Playwright corriendo en el CI (carrito, checkout, filtros, test, cuenta, admin, formularios, webhook).
 4. **Auditoría de seguridad** con la skill de Cloudflare que recomendó la cátedra (`npx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit --global`, después "security audit this codebase"). Deja el reporte fuera del repo (`~/security-audit-skill/programacion-tp/run-N`); los arreglos van en `fix/seguridad`, cada uno con su test, y el resumen al README.
 5. `docs/final`: README completo y guion de la demo.
 6. Opcionales (Agustín pidió hacerlos también): **PR `feat/email` (Resend)**, email de confirmación con el código y el link de seguimiento al crear el pedido (sin dominio propio, Resend solo le manda al dueño de la cuenta: alcanza para la demo); logo propio; borrar la rama vieja `chore/cambio-idea-cafe`.
