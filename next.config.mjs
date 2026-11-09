@@ -4,6 +4,9 @@ const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Los tests E2E hacen su propio build (contra la base de prueba) en otra carpeta,
+  // así no pisan el build normal de .next
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: supabase
       ? [{ protocol: "https", hostname: supabase.hostname, pathname: "/storage/v1/object/public/productos/**" }]

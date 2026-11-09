@@ -19,4 +19,37 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Tests unitarios
+        run: npm test
       - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Los tests escriben en la base de prueba: de a una corrida por vez (las demás esperan en fila)
+    concurrency:
+      group: e2e
+      cancel-in-progress: false
+    # Proyecto de Supabase SOLO para tests (no el de la tienda). La clave secreta va en Secrets.
+    env:
+      E2E_SUPABASE_URL: ${{ vars.E2E_SUPABASE_URL }}
+      E2E_SUPABASE_PUBLISHABLE_KEY: ${{ vars.E2E_SUPABASE_PUBLISHABLE_KEY }}
+      E2E_SUPABASE_SECRET_KEY: ${{ secrets.E2E_SUPABASE_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25
+          cache: npm
+      - run: npm ci
+      - name: Instalar Chrome para Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Tests E2E
+        run: npm run test:e2e
+      # Si algo falla, el reporte (con capturas y la grabación paso a paso) queda para descargar
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: reporte-playwright
+          path: playwright-report/
+          retention-days: 7
