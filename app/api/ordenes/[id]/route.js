@@ -1,3 +1,4 @@
+import { leerIdDeRuta, leerJson } from "@/lib/peticion";
 import { exigirAdmin, respuestaErrorBase, revalidarTienda } from "@/lib/admin";
 import { crearClienteSecreto } from "@/lib/supabase/secreto";
 import { CAMBIOS_ADMIN, ESTADOS } from "@/lib/ordenes";
@@ -8,8 +9,11 @@ export async function PATCH(request, { params }) {
   const admin = await exigirAdmin();
   if (admin.respuesta) return admin.respuesta;
 
-  const id = Number((await params).id);
-  const { estado } = await request.json().catch(() => ({}));
+  const id = await leerIdDeRuta(params);
+  if (!id) return Response.json({ error: "Ese pedido no existe." }, { status: 404 });
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const { estado } = lectura.datos;
   if (!ESTADOS[estado]) return Response.json({ error: "Ese estado no existe." }, { status: 400 });
 
   const { data: orden } = await admin.supabase.from("ordenes").select("id, estado").eq("id", id).maybeSingle();
