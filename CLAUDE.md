@@ -163,7 +163,7 @@ Un PR por paso, en este orden:
 1. ✅ `feat/catalogo-filtros` (E4): búsqueda y filtros + `GET /api/productos`.
 2. ✅ `feat/api-recomendacion` (E3): el test pasa a `POST /api/recomendacion` con `fetch`. (El formulario de contacto ya está: `POST /api/contacto`, tabla `mensajes` y Mensajes en el admin.)
 3. ✅ `test/e2e`: tests E2E con Playwright corriendo en el CI (carrito, checkout, filtros, test, cuenta, admin, formularios, webhook).
-4. **Auditoría de seguridad** con la skill de Cloudflare que recomendó la cátedra (`npx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit --global`, después "security audit this codebase"). Deja el reporte fuera del repo (`~/security-audit-skill/programacion-tp/run-N`); los arreglos van en `fix/seguridad`, cada uno con su test, y el resumen al README.
+4. ✅ **Auditoría de seguridad** (run-1: perfil standard, 40 agentes, 0 confirmados y 7 pistas, todas arregladas en `fix/seguridad`; resumen en el README, sección Seguridad; migración `006_limites.sql`) con la skill de Cloudflare que recomendó la cátedra (`npx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit --global`, después "security audit this codebase"). Deja el reporte fuera del repo (`~/security-audit-skill/programacion-tp/run-N`); los arreglos van en `fix/seguridad`, cada uno con su test, y el resumen al README.
 5. `docs/final`: README completo y guion de la demo.
 6. Opcionales (Agustín pidió hacerlos también): **PR `feat/email` (Resend)**, email de confirmación con el código y el link de seguimiento al crear el pedido (sin dominio propio, Resend solo le manda al dueño de la cuenta: alcanza para la demo); logo propio; borrar la rama vieja `chore/cambio-idea-cafe`.
 

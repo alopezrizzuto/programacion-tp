@@ -1,3 +1,4 @@
+import { leerJson } from "@/lib/peticion";
 import { crearClienteSecreto } from "@/lib/supabase/secreto";
 import { hayErrores } from "@/lib/auth";
 import { normalizarContacto, validarContacto } from "@/lib/validacion-contacto";
@@ -5,7 +6,9 @@ import { normalizarContacto, validarContacto } from "@/lib/validacion-contacto";
 // POST /api/contacto: guarda un mensaje del formulario de contacto.
 // Recibe { nombre, email, motivo, mensaje } y devuelve { ok: true } o los errores por campo.
 export async function POST(request) {
-  const datos = normalizarContacto(await request.json().catch(() => ({})));
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const datos = normalizarContacto(lectura.datos);
 
   // Campo trampa completo: es un bot. Se responde como si estuviera todo bien, pero no se guarda.
   if (datos.sitio) return Response.json({ ok: true }, { status: 201 });

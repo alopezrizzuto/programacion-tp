@@ -1,3 +1,4 @@
+import { leerJson } from "@/lib/peticion";
 import { obtenerCafes } from "@/lib/datos";
 import { recomendar, validarRespuestas } from "@/lib/recomendacion";
 
@@ -6,7 +7,9 @@ import { recomendar, validarRespuestas } from "@/lib/recomendacion";
 // cada uno con su % de coincidencia, los motivos y la molienda sugerida.
 // Responde 400 con { error } si falta una respuesta o alguna no es una de las opciones.
 export async function POST(request) {
-  const respuestas = await request.json().catch(() => null);
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const respuestas = lectura.datos;
   const problema = validarRespuestas(respuestas);
   if (problema) return Response.json({ error: problema }, { status: 400 });
 

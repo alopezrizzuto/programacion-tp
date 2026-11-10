@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CambiarEstado from "./CambiarEstado";
+import Paginacion, { cortarPagina, leerPagina, rangoDePagina } from "../Paginacion";
 import { adminDePagina } from "@/lib/admin";
 import { ESTADOS } from "@/lib/ordenes";
 import { formatearPrecio } from "@/lib/tienda";
@@ -20,16 +21,19 @@ const COLOR_ESTADO = { bien: "bg-tostado text-crema", mal: "bg-cereza text-crema
 // ?filtro=preparar|pago|enviados|todos
 export default async function AdminPedidosPage({ searchParams }) {
   const supabase = await adminDePagina();
-  const { filtro: elegido } = await searchParams;
+  const { filtro: elegido, pagina: paginaPedida } = await searchParams;
   const filtro = FILTROS.find((f) => f.id === elegido) ?? FILTROS[0];
+  const pagina = leerPagina(paginaPedida);
 
   // RLS deja al admin ver todos los pedidos (es_admin en la política de ordenes)
-  const { data: ordenes } = await supabase
+  const { data, error } = await supabase
     .from("ordenes")
     .select("*, orden_items(id, descripcion, molienda, cantidad)")
     .in("estado", filtro.estados)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .range(...rangoDePagina(pagina));
+  if (error) throw new Error(`No se pudieron leer los pedidos: ${error.message}`);
+  const { visibles: ordenes, hayMas } = cortarPagina(data);
 
   return (
     <div>
@@ -115,6 +119,8 @@ export default async function AdminPedidosPage({ searchParams }) {
           ))}
         </ul>
       )}
+
+      <Paginacion pagina={pagina} hayMas={hayMas} hrefDe={(n) => `/admin/pedidos?filtro=${filtro.id}&pagina=${n}`} />
     </div>
   );
 }

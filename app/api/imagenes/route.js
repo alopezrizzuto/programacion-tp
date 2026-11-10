@@ -1,3 +1,4 @@
+import { rechazarOrigenAjeno } from "@/lib/peticion";
 import { exigirAdmin } from "@/lib/admin";
 import { TAMANO_MAXIMO_IMAGEN, TIPOS_IMAGEN } from "@/lib/validacion-producto";
 
@@ -6,6 +7,8 @@ const EXTENSIONES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "we
 // POST /api/imagenes: sube una foto de producto a Supabase Storage y devuelve su dirección pública.
 // Llega como FormData (el formato de los formularios con archivos), no como JSON.
 export async function POST(request) {
+  const rechazo = rechazarOrigenAjeno(request);
+  if (rechazo) return rechazo;
   const admin = await exigirAdmin();
   if (admin.respuesta) return admin.respuesta;
 

@@ -51,6 +51,7 @@ En el **SQL Editor** de Supabase, ejecutar en orden el contenido de:
 4. `supabase/migrations/003_imagenes.sql`: bucket `productos` de Supabase Storage para las fotos (lectura pública, solo el admin sube o borra).
 5. `supabase/migrations/004_checkout.sql`: pedidos sin cuenta (código de seguimiento), datos de envío, medio de pago, montos y la función `confirmar_pago` (marca el pedido como pagado y descuenta el stock en una sola transacción).
 6. `supabase/migrations/005_mensajes.sql`: mensajes del formulario de contacto (solo el admin los lee).
+7. `supabase/migrations/006_limites.sql`: largos máximos en los datos de envío de los pedidos y en el nombre del perfil (ver [Seguridad](#seguridad)).
 
 En el plan gratis, Supabase pausa el proyecto después de 7 días sin uso: el workflow `mantener-supabase.yml` hace una consulta diaria para evitarlo.
 
@@ -231,6 +232,48 @@ npx playwright show-report        # el reporte, con capturas si algo falló
 
 **Lo que se prueba a mano.** El pago en Mercado Pago (la redirección a Checkout Pro y la tarjeta de prueba) no se puede automatizar: se prueba en la demo con la [lista de "Probar un pago"](#probar-un-pago-sandbox). Lo que hace el webhook con cada pago sí está cubierto por los unitarios (`decidirPago`) y los E2E (la firma).
 
+## Seguridad
+
+**Auditoría.** Se corrió la skill `security-audit` de Cloudflare (recomendada por la cátedra) con el flujo completo:
+
+- perfil `standard`, 40 agentes;
+- reconocimiento, 3 olas de búsqueda con críticos de cobertura, verificación independiente de cada candidato y verificación final de cada registro;
+- solo revisión del código, porque la compu no tenía un sandbox para ejecutar código de la tienda; por eso nada podía quedar "confirmado";
+- resultado: **ninguna vulnerabilidad confirmada** y **7 pistas** sin severidad ("necesitan validación"), todas arregladas en `fix/seguridad`.
+
+El reporte completo quedó fuera del repo, como pide la skill.
+
+**Lo que la auditoría verificó que está bien:**
+
+- el admin se chequea en cada página y cada ruta, y otra vez en la base con RLS;
+- los precios se recalculan en el servidor;
+- el webhook verifica la firma, le consulta el pago a Mercado Pago y ata el monto y la referencia;
+- `confirmar_pago` es idempotente, con lock de fila;
+- los códigos de seguimiento son impredecibles;
+- no hay secretos en el repo ni en el historial.
+
+| # | Pista | Arreglo | Test |
+|---|---|---|---|
+| 1 | **Login CSRF.** Otra página podía mandar un formulario oculto a `/api/auth/ingresar` y dejar al visitante logueado en la cuenta del atacante; sus compras quedaban en esa cuenta. | `lib/peticion.js`: todas las rutas que reciben datos rechazan pedidos de otro origen (403) y los que no son `application/json` (415). El webhook no, porque lo llama Mercado Pago y se protege con su firma. | `seguridad.test.js`, `api.spec.js` |
+| 2 | **Redirección abierta.** `/ingresar?siguiente=/%09/sitio-falso` pasaba el control: el navegador borra el tab y queda `//sitio-falso`. | `destinoSeguro` rechaza los caracteres de control y la barra invertida, resuelve la dirección con `new URL()` y la acepta solo si sigue en la tienda. | `seguridad.test.js`, `cuenta.spec.js` |
+| 3 | **Regex de email lento.** Con un email armado (`a@` + miles de puntos) el patrón tardaba segundos. | `lib/email.js`: un solo validador, con máximo de 254 caracteres antes del patrón y un patrón que crece en tiempo lineal. | `seguridad.test.js`, `api.spec.js` |
+| 4 | **Checkout sin máximos.** Se podían guardar ciudades o teléfonos de varios MB. | Máximos en `validarCheckout` y CHECKs en la base (`006_limites.sql`). | `seguridad.test.js`, `api.spec.js` |
+| 5 | **Formularios anónimos sin límite.** Con 100 mensajes o pedidos falsos se tapaban los reales en el admin, que mostraba solo 100. | Paginación en Mensajes y Pedidos (`app/admin/Paginacion.js`), más una regla de *rate limit* en Vercel Firewall para las rutas anónimas. | — |
+| 6 | **Límite de Supabase Auth compartido.** Lo cuenta la IP del servidor, no la de cada visitante. | La misma regla de Vercel Firewall sobre `/api/auth/*`. | — |
+| 7 | **El registro revela si un email ya tiene cuenta.** | Se acepta como decisión de diseño: el riesgo es bajo (no da acceso a ningún dato) y, con "Confirm email" apagado, Supabase lo revela igual en su propia API. | — |
+
+**Mejoras de defensa en profundidad sumadas:**
+
+- encabezados de seguridad en `next.config.mjs` (`X-Frame-Options: DENY`, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`);
+- cookies de sesión `httpOnly` (y `secure` en Vercel), en `lib/supabase/cookies.js`;
+- `force-dynamic` explícito en `/seguimiento/[codigo]`;
+- un cuerpo JSON `null` da 400 en vez de 500;
+- ids de la URL validados en todas las rutas del admin;
+- el webhook responde 500 si falla la base, para que Mercado Pago reintente;
+- `/api/auth/salir` avisa si no pudo cerrar la sesión;
+- el `mailto:` del admin va codificado;
+- `permissions: contents: read` en el CI.
+
 ## Estructura
 
 ```
@@ -251,6 +294,8 @@ lib/
   admin.js           chequeo de rol admin, errores de la base y regeneración de la tienda
   validacion-producto.js   validación del formulario de productos (navegador y servidor)
   validacion-checkout.js   validación del checkout (navegador y servidor)
+  email.js           validación de email compartida (con largo máximo y patrón lineal)
+  peticion.js        controles de las rutas: mismo origen, solo JSON y cuerpo válido
   ordenes.js         armado de la orden, estados y código de seguimiento (funciones puras)
   mercadopago.js     preferencia, consulta de pagos y verificación de la firma del webhook
   supabase/          clientes de Supabase: con la sesión del usuario (cookies) y con la clave secreta (solo servidor)

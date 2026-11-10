@@ -1,3 +1,4 @@
+import { leerJson, rechazarOrigenAjeno } from "@/lib/peticion";
 import { exigirAdmin, respuestaErrorBase, revalidarTienda } from "@/lib/admin";
 import { hayErrores } from "@/lib/auth";
 import { normalizarProducto, validarProducto } from "@/lib/validacion-producto";
@@ -23,7 +24,9 @@ export async function PUT(request, { params }) {
   if (!existente) return NO_EXISTE();
 
   // La categoría no se cambia al editar: un café no se convierte en accesorio
-  const producto = normalizarProducto({ ...(await request.json().catch(() => ({}))), categoria: existente.categoria });
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const producto = normalizarProducto({ ...lectura.datos, categoria: existente.categoria });
   const errores = validarProducto(producto);
   if (hayErrores(errores)) return Response.json({ errores }, { status: 400 });
 
@@ -65,7 +68,9 @@ export async function PATCH(request, { params }) {
   const id = await leerId(params);
   if (!id) return NO_EXISTE();
 
-  const { activo } = await request.json().catch(() => ({}));
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const { activo } = lectura.datos;
   if (typeof activo !== "boolean") return Response.json({ error: "Falta indicar si está activo." }, { status: 400 });
 
   const { data, error } = await admin.supabase.from("productos").update({ activo }).eq("id", id).select("id, activo").maybeSingle();
@@ -79,6 +84,8 @@ export async function PATCH(request, { params }) {
 // DELETE /api/productos/:id: borra el producto con sus variantes y reseñas.
 // Si ya tiene pedidos, la base no lo permite (se avisa que conviene desactivarlo).
 export async function DELETE(request, { params }) {
+  const rechazo = rechazarOrigenAjeno(request);
+  if (rechazo) return rechazo;
   const admin = await exigirAdmin();
   if (admin.respuesta) return admin.respuesta;
   const id = await leerId(params);

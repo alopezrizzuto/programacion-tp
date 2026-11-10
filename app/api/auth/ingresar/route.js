@@ -1,9 +1,12 @@
+import { leerJson } from "@/lib/peticion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { hayErrores, normalizar, traducirErrorAuth, validarIngreso } from "@/lib/auth";
 
 // POST /api/auth/ingresar: inicia la sesión. Supabase la guarda en cookies de la respuesta.
 export async function POST(request) {
-  const datos = normalizar(await request.json().catch(() => ({})));
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const datos = normalizar(lectura.datos);
   const errores = validarIngreso(datos);
   if (hayErrores(errores)) return Response.json({ errores }, { status: 400 });
 

@@ -1,10 +1,13 @@
+import { leerJson } from "@/lib/peticion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { hayErrores, normalizar, traducirErrorAuth, validarRegistro } from "@/lib/auth";
 
 // POST /api/auth/registro: crea la cuenta y deja la sesión iniciada.
 // Vuelve a validar todo: lo que llega del navegador puede venir modificado.
 export async function POST(request) {
-  const datos = normalizar(await request.json().catch(() => ({})));
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const datos = normalizar(lectura.datos);
   const errores = validarRegistro(datos);
   if (hayErrores(errores)) return Response.json({ errores }, { status: 400 });
 

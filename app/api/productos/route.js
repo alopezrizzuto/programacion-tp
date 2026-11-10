@@ -1,3 +1,4 @@
+import { leerJson } from "@/lib/peticion";
 import { exigirAdmin, respuestaErrorBase, revalidarTienda } from "@/lib/admin";
 import { hayErrores } from "@/lib/auth";
 import { filtrarProductos, leerFiltros, paisesDeOrigen } from "@/lib/catalogo";
@@ -22,7 +23,9 @@ export async function POST(request) {
   const admin = await exigirAdmin();
   if (admin.respuesta) return admin.respuesta;
 
-  const producto = normalizarProducto(await request.json().catch(() => ({})));
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const producto = normalizarProducto(lectura.datos);
   const errores = validarProducto(producto);
   if (hayErrores(errores)) return Response.json({ errores }, { status: 400 });
 

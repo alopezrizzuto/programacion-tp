@@ -1,3 +1,4 @@
+import { leerJson } from "@/lib/peticion";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { crearClienteSecreto } from "@/lib/supabase/secreto";
 import { obtenerProductos } from "@/lib/datos";
@@ -10,7 +11,9 @@ import { normalizarCheckout, validarCheckout } from "@/lib/validacion-checkout";
 // Recibe { email, nombre, telefono, direccion, ciudad, provincia, codigoPostal, medioPago, items }
 // y devuelve { codigo } (transferencia) o { codigo, linkPago } (Mercado Pago).
 export async function POST(request) {
-  const cuerpo = await request.json().catch(() => ({}));
+  const lectura = await leerJson(request);
+  if (lectura.respuesta) return lectura.respuesta;
+  const cuerpo = lectura.datos;
   const datos = normalizarCheckout(cuerpo);
   const errores = validarCheckout(datos);
   if (hayErrores(errores)) return Response.json({ errores }, { status: 400 });

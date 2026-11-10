@@ -10,7 +10,8 @@ const LISTO = () => new Response(null, { status: 200 });
 // 3. actualizar el pedido. Responder 200 le dice "recibido"; con otro código, lo vuelve a mandar.
 export async function POST(request) {
   const url = new URL(request.url);
-  const cuerpo = await request.json().catch(() => ({}));
+  // ?? {}: un cuerpo "null" no tiene que hacer fallar la ruta
+  const cuerpo = (await request.json().catch(() => null)) ?? {};
   const tipo = url.searchParams.get("type") ?? cuerpo.type;
   const idPago = url.searchParams.get("data.id") ?? cuerpo.data?.id;
 
@@ -44,11 +45,17 @@ export async function POST(request) {
   if (!pago?.external_reference) return LISTO();
 
   const supabase = crearClienteSecreto();
-  const { data: orden } = await supabase
+  const { data: orden, error: errorLectura } = await supabase
     .from("ordenes")
     .select("id, estado, total")
     .eq("codigo", pago.external_reference)
     .maybeSingle();
+  // Si la base falló, se responde 500 para que Mercado Pago reintente
+  // (con un 200 dejaría de avisar y un pago aprobado quedaría sin confirmar)
+  if (errorLectura) {
+    console.error("Webhook, lectura del pedido:", errorLectura.message);
+    return Response.json({ error: "No se pudo leer el pedido." }, { status: 500 });
+  }
   // Qué hacer según el estado y el monto del pago (lib/mercadopago.js, con tests unitarios)
   const { accion, motivo } = decidirPago(pago, orden);
 

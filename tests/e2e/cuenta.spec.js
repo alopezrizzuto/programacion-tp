@@ -1,6 +1,6 @@
 // Cuentas: registro, ingreso y "Mis pedidos".
 import { test, expect } from "@playwright/test";
-import { CLIENTE, agregarCafe, completarEnvio, emailDePrueba, ingresar } from "./ayudantes.js";
+import { CLIENTE, agregarCafe, completarEnvio, contrasena, emailDePrueba, ingresar } from "./ayudantes.js";
 
 test("sin sesión, /cuenta lleva a ingresar", async ({ page }) => {
   await page.goto("/cuenta");
@@ -54,4 +54,21 @@ test("un pedido hecho con sesión aparece en Mis pedidos", async ({ page }) => {
 
   await page.goto("/cuenta");
   await expect(page.getByRole("link", { name: `Pedido ${codigo}` })).toBeVisible();
+});
+
+// Arreglos de la auditoría de seguridad (fix/seguridad)
+test("la cookie de sesión no se puede leer desde JavaScript (httpOnly)", async ({ page, context }) => {
+  await ingresar(page, CLIENTE);
+  const sesion = (await context.cookies()).filter((cookie) => cookie.name.startsWith("sb-"));
+  expect(sesion.length).toBeGreaterThan(0);
+  expect(sesion.every((cookie) => cookie.httpOnly && cookie.sameSite === "Lax")).toBe(true);
+  expect(await page.evaluate(() => document.cookie)).not.toContain("sb-");
+});
+
+test("?siguiente con un tab escondido ya no lleva a otro sitio después de ingresar", async ({ page }) => {
+  await page.goto("/ingresar?siguiente=%2F%09%2Fexample.invalid");
+  await page.getByLabel("Email").fill(CLIENTE.email);
+  await page.getByLabel("Contraseña").fill(contrasena());
+  await page.getByRole("button", { name: "Ingresar" }).click();
+  await expect(page).toHaveURL("/cuenta");
 });
