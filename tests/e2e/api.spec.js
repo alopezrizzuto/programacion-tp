@@ -44,7 +44,9 @@ test.describe("POST /api/recomendacion", () => {
 
   test("respuestas incompletas o inventadas dan 400", async ({ request }) => {
     expect((await request.post("/api/recomendacion", { data: { intensidad: "suave" } })).status()).toBe(400);
-    expect((await request.post("/api/recomendacion", { data: "no es json" })).status()).toBe(400);
+    // Un cuerpo que no es JSON se rechaza antes de mirar las respuestas (auditoría de seguridad)
+    const noJson = await request.post("/api/recomendacion", { data: "no es json", headers: { "content-type": "text/plain" } });
+    expect(noJson.status()).toBe(415);
   });
 });
 
@@ -120,5 +122,66 @@ test.describe("Webhook de Mercado Pago", () => {
       headers: { "x-signature": firmar("123456", "aviso-1"), "x-request-id": "aviso-1" },
     });
     expect(respuesta.status()).toBe(502);
+  });
+});
+
+// Arreglos de la auditoría de seguridad (fix/seguridad)
+test.describe("Auditoría de seguridad", () => {
+  test("login CSRF: un pedido desde otro sitio se rechaza (403) y no deja sesión", async ({ request }) => {
+    const respuesta = await request.post("/api/auth/ingresar", {
+      data: { email: "alguien@example.com", password: "cualquiera1" },
+      headers: { origin: "https://sitio-falso.example" },
+    });
+    expect(respuesta.status()).toBe(403);
+    expect(respuesta.headers()["set-cookie"]).toBeUndefined();
+  });
+
+  test("login CSRF: un formulario text/plain se rechaza (415)", async ({ request }) => {
+    const respuesta = await request.post("/api/auth/ingresar", {
+      data: '{"email":"alguien@example.com","password":"cualquiera1","x":"="}',
+      headers: { "content-type": "text/plain" },
+    });
+    expect(respuesta.status()).toBe(415);
+  });
+
+  test("un cuerpo JSON null da 400 (antes hacía fallar la ruta con 500)", async ({ request }) => {
+    for (const ruta of ["/api/contacto", "/api/ordenes", "/api/auth/registro"]) {
+      const respuesta = await request.post(ruta, { data: "null", headers: { "content-type": "application/json" } });
+      expect(respuesta.status(), ruta).toBe(400);
+    }
+  });
+
+  test("un email armado para trabar el servidor se rechaza enseguida", async ({ request }) => {
+    const inicio = Date.now();
+    const respuesta = await request.post("/api/contacto", {
+      data: { nombre: "Prueba", email: "a@" + ".".repeat(100000) + "@", motivo: "otro", mensaje: "Un mensaje de prueba." },
+    });
+    expect(respuesta.status()).toBe(400);
+    expect(Date.now() - inicio).toBeLessThan(3000);
+  });
+
+  test("el checkout rechaza una ciudad de 1 MB", async ({ request }) => {
+    const respuesta = await request.post("/api/ordenes", {
+      data: { ...ENVIO, email: emailDePrueba("ciudad"), ciudad: "x".repeat(1_000_000), items: [{ varianteId: 601, molienda: "fina", cantidad: 1 }] },
+    });
+    expect(respuesta.status()).toBe(400);
+    expect((await respuesta.json()).errores).toHaveProperty("ciudad");
+  });
+
+  test("las respuestas llevan los encabezados de seguridad", async ({ request }) => {
+    const encabezados = (await request.get("/")).headers();
+    expect(encabezados["x-frame-options"]).toBe("DENY");
+    expect(encabezados["content-security-policy"]).toContain("frame-ancestors 'none'");
+    expect(encabezados["x-content-type-options"]).toBe("nosniff");
+    expect(encabezados["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+  });
+
+  test("la página de seguimiento no se guarda en caché", async ({ request }) => {
+    const pedido = await request.post("/api/ordenes", {
+      data: { ...ENVIO, email: emailDePrueba("cache"), items: [{ varianteId: 601, molienda: "fina", cantidad: 1 }] },
+    });
+    const { codigo } = await pedido.json();
+    const cache = (await request.get(`/seguimiento/${codigo}`)).headers()["cache-control"];
+    expect(cache).toContain("no-store");
   });
 });
