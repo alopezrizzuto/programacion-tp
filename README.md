@@ -6,6 +6,30 @@ Tienda online de café de especialidad: 6 cafés en bolsa (250 g, 500 g y 1 kg, 
 
 > Es una tienda de demostración: las reseñas, estadísticas y pagos son de ejemplo.
 
+**Índice:** [Qué tiene](#qué-tiene) · [Entregables](#entregables-de-la-cátedra) · [Stack](#stack) · [Arquitectura](#arquitectura) · [Cómo correrlo](#cómo-correrlo) · [Modelo de datos](#modelo-de-datos) · [Catálogo](#catálogo-búsqueda-y-filtros) · [Cuentas](#cuentas-de-usuario) · [Checkout](#checkout-y-pedidos) · [Contacto](#contacto) · [Test de café](#test-elegí-tu-café-ideal) · [Panel admin](#panel-admin) · [Accesibilidad](#interfaz-y-accesibilidad) · [CI/CD](#cicd-y-despliegue) · [Tests](#tests) · [Seguridad](#seguridad) · [Estructura](#estructura) · [Decisiones](#decisiones) · [Guion de la demo](docs/guion-demo.md)
+
+## Qué tiene
+
+- **Portada** con un hero interactivo (un video del grano a la taza que avanza con el scroll), los cafés, los beneficios de compra y el test **"Elegí tu café ideal"**, que recomienda un café y su molienda con cuatro preguntas.
+- **Catálogo** con búsqueda y filtros en la URL: perfil, tostado, acidez, cuerpo, origen, peso, precio y stock.
+- **Página de cada café**, con peso, molienda, packs con descuento (2 bolsas −10%, 3 bolsas −20%), stock real y fecha de entrega estimada.
+- **Carrito** en un panel lateral, con upsell de accesorios y barra de envío gratis.
+- **Checkout sin cuenta**, con Mercado Pago o transferencia (10% OFF), y **seguimiento** del pedido con un código.
+- **Cuentas:** registro, ingreso y "Mis pedidos".
+- **Panel admin:** productos y variantes (alta, edición, borrado, stock, fotos), pedidos (confirmar pago, enviar, entregar) y mensajes de contacto.
+- **Webhook** de Mercado Pago que confirma el pago y descuenta el stock.
+
+## Entregables de la cátedra
+
+| Entregable | Dónde verlo |
+|---|---|
+| **E1:** repo, pipeline y preview | Una rama y un PR por tarea, con checklist. GitHub Actions corre lint, unitarios, build y E2E en cada PR. Vercel publica una preview por PR (ver [CI/CD](#cicd-y-despliegue)). |
+| **E2:** landing y vistas responsivas | HTML semántico, diseño mobile-first con Tailwind, accesibilidad (ver [Interfaz y accesibilidad](#interfaz-y-accesibilidad)) y una identidad visual propia. |
+| **E3:** formularios con fetch y validación | Registro, ingreso, contacto, checkout, test de café y formularios del admin. La validación es compartida entre navegador y servidor (`lib/validacion-*.js`, `lib/auth.js`, `lib/recomendacion.js`), el envío es con `fetch` y los errores se muestran por campo. |
+| **E4:** catálogo y API básica | `/productos` con búsqueda y filtros, y `GET /api/productos` con los mismos filtros (`lib/catalogo.js`). |
+| **E5:** CRUD en Supabase y admin | Migraciones y seed en SQL, RLS, `/admin` con el CRUD de productos, variantes, stock y fotos, y la API de admin. |
+| **E6:** checkout y webhook | `POST /api/ordenes`, Mercado Pago Checkout Pro (sandbox) y `POST /api/webhooks/mercadopago` (firma, consulta del pago y `confirmar_pago`). Lo prueban tests unitarios (firma y montos) y E2E (checkout y webhook); en total son 70 unitarios y 51 E2E en el CI. |
+
 ## Stack
 
 - **Next.js 16** (App Router) + **React 19** + **Tailwind CSS v4**, en JavaScript.
@@ -13,7 +37,23 @@ Tienda online de café de especialidad: 6 cafés en bolsa (250 g, 500 g y 1 kg, 
 - **Vercel** para el despliegue (con preview por PR) y **GitHub Actions** para CI (lint, tests unitarios, build y tests E2E).
 - **Mercado Pago** Checkout Pro (sandbox) con webhook.
 - **Tests:** unitarios con el runner de Node (`node:test`) y E2E con **Playwright**.
-- Próximamente: email de confirmación (Resend).
+
+## Arquitectura
+
+```
+Navegador ──► Next.js en Vercel
+               ├─ Páginas (Server Components): leen el catálogo de Supabase (clave pública + RLS)
+               │   y se regeneran cada 5 minutos; /productos, /cuenta y /seguimiento se arman en cada visita
+               ├─ Componentes de cliente: carrito (localStorage), filtros, formularios con fetch, test de café
+               └─ Route Handlers (/api/*): validan y deciden en el servidor
+                    ├─ Supabase: con la sesión del usuario (RLS) o con la clave secreta (pedidos, webhook)
+                    └─ Mercado Pago: crea la preferencia de pago y consulta cada pago avisado
+
+Mercado Pago ──► POST /api/webhooks/mercadopago ──► confirmar_pago (SQL: pagado + descuento de stock)
+GitHub ──► Actions (lint, unitarios, build, E2E) y Vercel (preview por PR, producción desde main)
+```
+
+La lógica de negocio vive en funciones puras de `lib/` (carrito, órdenes, filtros, recomendación y validaciones). La usan el navegador y el servidor, y es lo que prueban los tests unitarios.
 
 ## Cómo correrlo
 
@@ -185,6 +225,37 @@ update public.profiles set role = 'admin'
 where id = (select id from auth.users where email = 'tu@email.com');
 ```
 
+## Interfaz y accesibilidad
+
+- **Semántica:**
+  - `lang="es"`, un enlace "Saltar al contenido" al `<main>` y un solo `h1` por página;
+  - landmarks (`header`, `nav` con nombre, `main`, `footer`);
+  - las secciones llevan `aria-labelledby`;
+  - las tablas, `caption` y `th` con `scope`.
+- **Formularios:**
+  - cada campo tiene su `label`;
+  - los errores se conectan con `aria-describedby` y `aria-invalid`;
+  - los avisos usan `role="alert"` o `role="status"`;
+  - las opciones son casillas o radios reales (las pastillas del catálogo y las tarjetas del test).
+- **Teclado:**
+  - foco visible en todo (`:focus-visible`);
+  - el carrito es un `<dialog>` nativo, que encierra el foco y se cierra con Escape;
+  - el test se recorre con flechas y Tab.
+- **Movimiento:**
+  - con "reducir movimiento" se apagan las transiciones y las animaciones;
+  - el video del hero solo avanza al ritmo del scroll y tiene un link para saltearlo.
+- **Contraste:** el texto secundario usa un marrón que cumple AA sobre los fondos crema y kraft.
+- **Responsive:** mobile-first, sin scroll horizontal a 375 px (lo verifica un test E2E).
+
+## CI/CD y despliegue
+
+- **Ramas:** se trabaja en una rama por tarea (`feat/…`, `fix/…`, `test/…`, `docs/…`) y se integra con un PR hacia `main` que lleva su checklist (qué se hizo y cómo se probó).
+- **GitHub Actions** (`.github/workflows/ci.yml`), en cada PR y en cada push a `main`:
+  - job **build**: `npm ci`, lint, tests unitarios y `next build`;
+  - job **e2e**: Playwright contra un proyecto de Supabase solo para tests.
+- **Vercel:** publica una **preview por PR** y la producción desde `main` (https://programacion-tp-black.vercel.app). Las variables de entorno están en Vercel; las secretas, marcadas como *Sensitive*.
+- **`mantener-supabase.yml`:** hace una consulta diaria para que Supabase no pause los proyectos del plan gratis.
+
 ## Tests
 
 Corren en cada PR y en cada push a `main` (GitHub Actions). Hay dos tipos:
@@ -278,7 +349,7 @@ El reporte completo quedó fuera del repo, como pide la skill.
 
 ```
 app/                 páginas (App Router) y componentes
-  admin/             panel admin (resumen, pedidos, lista de productos, formulario)
+  admin/             panel admin (resumen, pedidos y mensajes paginados, lista de productos, formulario)
   checkout/          formulario de compra
   seguimiento/       búsqueda por código y página de cada pedido
   api/auth/          Route Handlers de la cuenta
@@ -324,4 +395,4 @@ playwright.config.js cómo se levanta la tienda para los E2E (base de prueba, pu
 - **Una sola validación para el navegador y el servidor** (`lib/auth.js`, `lib/validacion-producto.js`, `lib/validacion-checkout.js`, `lib/validacion-contacto.js`, `lib/recomendacion.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
 - **Se compra sin cuenta**, con un código de seguimiento: menos pasos para comprar. La clave secreta de Supabase se usa solo en el servidor, para lo que no depende de una sesión (crear pedidos, el webhook y el seguimiento por código).
 
-El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), y el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md).
+El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md) y el recorrido de la presentación en [`docs/guion-demo.md`](docs/guion-demo.md).
