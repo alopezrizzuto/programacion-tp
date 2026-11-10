@@ -1,4 +1,5 @@
 import MarcarLeido from "./MarcarLeido";
+import Paginacion, { cortarPagina, leerPagina, rangoDePagina } from "../Paginacion";
 import { adminDePagina } from "@/lib/admin";
 import { MOTIVOS } from "@/lib/validacion-contacto";
 
@@ -7,18 +8,26 @@ export const metadata = {
 };
 
 // Mensajes del formulario de contacto, del más nuevo al más viejo. Los no leídos se destacan.
-export default async function AdminMensajesPage() {
+export default async function AdminMensajesPage({ searchParams }) {
   const supabase = await adminDePagina();
-  const { data: mensajes } = await supabase.from("mensajes").select("*").order("created_at", { ascending: false }).limit(100);
-  const sinLeer = mensajes.filter((mensaje) => !mensaje.leido).length;
+  const pagina = leerPagina((await searchParams).pagina);
+  const { data, error } = await supabase
+    .from("mensajes")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .range(...rangoDePagina(pagina));
+  if (error) throw new Error(`No se pudieron leer los mensajes: ${error.message}`);
+  const { visibles: mensajes, hayMas } = cortarPagina(data);
+  // Los no leídos se cuentan en toda la tabla, no solo en esta página
+  const { count: sinLeer } = await supabase.from("mensajes").select("id", { count: "exact", head: true }).eq("leido", false);
 
   return (
     <div>
       <h1 className="font-display text-5xl">Mensajes</h1>
       <p className="mt-3 text-marron">
-        {mensajes.length === 0
+        {mensajes.length === 0 && pagina === 1
           ? "Todavía no llegó ningún mensaje del formulario de contacto."
-          : `${sinLeer} sin leer de ${mensajes.length}.`}
+          : `${sinLeer ?? 0} sin leer.`}
       </p>
 
       <ul className="mt-8 space-y-4">
@@ -34,7 +43,8 @@ export default async function AdminMensajesPage() {
                   {!mensaje.leido && <span className="rounded-full bg-tostado px-3 py-0.5 text-sm text-crema">Nuevo</span>}
                 </p>
                 <p className="mt-1 text-sm text-marron">
-                  <a href={`mailto:${mensaje.email}`} className="underline">
+                  {/* encodeURIComponent: un email con "?cc=..." no puede agregar destinatarios ni texto al mail */}
+                  <a href={`mailto:${encodeURIComponent(mensaje.email)}`} className="underline">
                     {mensaje.email}
                   </a>
                   {", "}
@@ -53,6 +63,8 @@ export default async function AdminMensajesPage() {
           </li>
         ))}
       </ul>
+
+      <Paginacion pagina={pagina} hayMas={hayMas} hrefDe={(n) => `/admin/mensajes?pagina=${n}`} />
     </div>
   );
 }
