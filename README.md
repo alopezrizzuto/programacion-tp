@@ -6,7 +6,7 @@ Tienda online de café de especialidad: 6 cafés en bolsa (250 g, 500 g y 1 kg, 
 
 > Es una tienda de demostración: las reseñas, estadísticas y pagos son de ejemplo.
 
-**Índice:** [Qué tiene](#qué-tiene) · [Entregables](#entregables-de-la-cátedra) · [Stack](#stack) · [Arquitectura](#arquitectura) · [Cómo correrlo](#cómo-correrlo) · [Modelo de datos](#modelo-de-datos) · [Catálogo](#catálogo-búsqueda-y-filtros) · [Cuentas](#cuentas-de-usuario) · [Checkout](#checkout-y-pedidos) · [Contacto](#contacto) · [Test de café](#test-elegí-tu-café-ideal) · [Panel admin](#panel-admin) · [Accesibilidad](#interfaz-y-accesibilidad) · [CI/CD](#cicd-y-despliegue) · [Tests](#tests) · [Seguridad](#seguridad) · [Estructura](#estructura) · [Decisiones](#decisiones) · [Guion de la demo](docs/guion-demo.md)
+**Índice:** [Qué tiene](#qué-tiene) · [Entregables](#entregables-de-la-cátedra) · [Stack](#stack) · [Tecnologías](#tecnologías-para-qué-por-qué-y-alternativas) · [IA](#herramientas-de-inteligencia-artificial) · [Idea inicial y final](#de-la-idea-inicial-a-la-versión-final) · [Dificultades y limitaciones](#dificultades-soluciones-y-limitaciones) · [Arquitectura](#arquitectura) · [Cómo correrlo](#cómo-correrlo) · [Modelo de datos](#modelo-de-datos) · [Catálogo](#catálogo-búsqueda-y-filtros) · [Cuentas](#cuentas-de-usuario) · [Checkout](#checkout-y-pedidos) · [Contacto](#contacto) · [Test de café](#test-elegí-tu-café-ideal) · [Panel admin](#panel-admin) · [Accesibilidad](#interfaz-y-accesibilidad) · [CI/CD](#cicd-y-despliegue) · [Tests](#tests) · [Seguridad](#seguridad) · [Estructura](#estructura) · [Decisiones](#decisiones) · [Guion de la exposición](docs/guion-demo.md)
 
 ## Qué tiene
 
@@ -38,6 +38,69 @@ Tienda online de café de especialidad: 6 cafés en bolsa (250 g, 500 g y 1 kg, 
 - **Mercado Pago** Checkout Pro (sandbox) con webhook.
 - **Tests:** unitarios con el runner de Node (`node:test`) y E2E con **Playwright**.
 
+### Tecnologías: para qué, por qué y alternativas
+
+| Tecnología | Para qué | Por qué | Alternativa considerada |
+|---|---|---|---|
+| **JavaScript** | Todo el código | Es lo que ya sabía y alcanza para el alcance del proyecto | TypeScript: más seguridad de tipos, pero sumaba otra curva de aprendizaje |
+| **Next.js 16 (App Router) + React 19** | Páginas, componentes y API (Route Handlers) en un solo proyecto | El servidor y la interfaz en el mismo repo, con Server Components que leen la base sin exponer claves | React con Express aparte: dos proyectos y dos deploys |
+| **Tailwind CSS v4** | Estilos, con la paleta definida una sola vez en `globals.css` | Rápido para diseño responsive y consistente | CSS Modules |
+| **`next/font` (Archivo)** | Tipografía de la marca | La sirve el propio sitio, sin parpadeo ni pedidos a Google | Google Fonts por `<link>` |
+| **Supabase (Postgres, Auth, Storage, RLS)** | Base de datos, cuentas, fotos y permisos | SQL directo (lo pide la consigna) más Auth y Storage incluidos, con plan gratis | Firebase (no es SQL); Postgres propio con un ORM |
+| **`@supabase/ssr` y `@supabase/supabase-js`** | Sesión en cookies desde el servidor y consultas | La librería oficial para Next con App Router | Guardar el token en `localStorage` (menos seguro) |
+| **Mercado Pago Checkout Pro** | Pagos, en sandbox | El medio de pago de Argentina; la página de pago la pone Mercado Pago, así que no tocamos datos de tarjeta | Checkout Bricks (el formulario de tarjeta queda dentro de la tienda: más trabajo y más responsabilidad) |
+| **`fetch` en lugar del SDK de Mercado Pago** | Crear la preferencia y consultar pagos | Son dos pedidos HTTP: una dependencia menos y se entiende qué se manda | SDK `mercadopago` |
+| **Vercel** | Deploy, preview por PR y variables de entorno | Integración directa con Next y GitHub | Netlify, Render |
+| **GitHub Actions** | CI: lint, tests, build y E2E | Corre con cada PR, gratis, en el mismo lugar que el código | — |
+| **Playwright** | Tests E2E en un Chrome real | Prueba la tienda como la usa una persona; también se usó para verificar cada cambio visual | Cypress |
+| **`node:test`** | Tests unitarios de `lib/` | Viene con Node: cero dependencias | Jest, Vitest |
+| **ESLint** | Revisión de código | Viene configurado con Next | — |
+| **ffmpeg** | Preparar el video del hero | Ajustar los colores a la paleta y codificarlo con todos los cuadros independientes, para que adelantar y retroceder con el scroll sea fluido | — |
+
+### Herramientas de inteligencia artificial
+
+| Herramienta | Para qué |
+|---|---|
+| **Claude (claude.ai)** | Evaluar la idea con la consigna y la rúbrica, y planificar el cronograma de 9 semanas |
+| **Claude Code** | Desarrollo con un agente en el repo. El contexto vive en `CLAUDE.md` (consigna, decisiones, reglas de trabajo). Explica cada cambio antes de hacerlo, trabaja con rama y PR y prueba con Playwright antes de commitear |
+| **Higgsfield, con GPT Image 2.5** | Fotos de los 6 cafés, los 4 accesorios y la portada, a partir de una misma foto de referencia (misma bolsa, luz y fondo) |
+| **Higgsfield, con Kling 3.0** | Las cuatro tomas del video del hero (del grano a la taza). Se eligió el modelo más barato que alcanzaba |
+| **Skill `security-audit` de Cloudflare** (en Claude Code) | Auditoría de seguridad de todo el código (ver [Seguridad](#seguridad)) |
+
+Cómo se revisó lo que proponía la IA: cada cambio pasó por una rama y un PR, el lint y los tests del CI, y una prueba en el navegador (Playwright) antes de mergear. Los errores y aprendizajes están en [`PROMPTS.md`](PROMPTS.md).
+
+### De la idea inicial a la versión final
+
+- **La idea:** empezó como una tienda de **manteles antimanchas** (diseños con variantes por medida). El primer día se cambió a **café de especialidad**: permitía filtros con más sentido (perfil, tostado, acidez), una funcionalidad propia (el test que recomienda café) y una identidad visual más clara.
+- **La molienda:** se pensó como variante y quedó como opción del pedido. Como variante eran 90 combinaciones con stock propio en lugar de 18.
+- **El test de café:** al principio calculaba en el navegador. Se pasó a `POST /api/recomendacion` con `fetch` y validación en las dos puntas.
+- **El hero:** primero fue un video que se reproducía solo, en un recuadro y con tomas equivocadas. Terminó como un video a pantalla grande que avanza con el scroll, con suavizado para que un scroll rápido no saltee la historia.
+- **Las fotos:** al principio eran bolsas dibujadas en SVG (`BolsaCafe.js`, que sigue como respaldo para productos sin foto). Después se generaron fotos con IA.
+- **La compra:** se agregó la compra **sin cuenta**, con código de seguimiento, y la **transferencia** con 10% OFF además de Mercado Pago.
+- **Lo que se sumó al final:** tests E2E contra una base aparte, una auditoría de seguridad y sus arreglos.
+
+### Dificultades, soluciones y limitaciones
+
+**Dificultades y cómo se resolvieron:**
+
+| Dificultad | Solución |
+|---|---|
+| Los avisos de Mercado Pago no llegaban | La URL del webhook tenía solo el dominio. Se encontró mandando un POST a cada dirección posible y comparando las respuestas |
+| En el sandbox, la firma del webhook nunca coincide | La firma la hace la cuenta vendedor de prueba, cuya clave no está disponible. Se documentó `MERCADOPAGO_SANDBOX`: la seguridad la da consultar el pago a Mercado Pago |
+| Supabase pausó el proyecto por inactividad y se cayó la tienda | Un workflow que hace una consulta diaria |
+| El video del hero se veía pixelado y un scroll rápido salteaba la historia | Formato cuadrado a altura completa, re-codificado con ffmpeg y suavizado en cada cuadro |
+| Los tests E2E no podían escribir en la base de la tienda | Un proyecto de Supabase solo para tests, que se prepara y se limpia solo |
+
+**Limitaciones pendientes:**
+
+- El stock se descuenta al pagar, no se reserva al crear el pedido: dos compras simultáneas de la última bolsa pueden sobrevender (se ve al confirmar).
+- En producción se usan credenciales de prueba de Mercado Pago, así que la firma del webhook no se exige (`MERCADOPAGO_SANDBOX=true`).
+- No hay email de confirmación del pedido: Resend necesita un dominio propio para mandar a cualquier dirección.
+- No hay recuperación de contraseña.
+- La fecha de entrega no tiene en cuenta los feriados.
+- Las reseñas, las estadísticas y las fotos son de ejemplo, y el logo es provisorio (el grano y el nombre en la tipografía de la marca).
+- Las pistas de la auditoría se arreglaron, pero no se pudieron confirmar ejecutando, porque no había un entorno aislado.
+
 ## Arquitectura
 
 ```
@@ -52,6 +115,16 @@ Navegador ──► Next.js en Vercel
 Mercado Pago ──► POST /api/webhooks/mercadopago ──► confirmar_pago (SQL: pagado + descuento de stock)
 GitHub ──► Actions (lint, unitarios, build, E2E) y Vercel (preview por PR, producción desde main)
 ```
+
+**Recorrido de los datos en una compra:**
+
+1. El carrito guarda en `localStorage` solo variante, molienda y cantidad.
+2. El checkout valida en el navegador y manda los datos con `fetch` a `POST /api/ordenes`.
+3. La API vuelve a validar y lee precios y stock de Supabase. `armarOrden` calcula el total y el pedido se guarda en `ordenes` y `orden_items`.
+4. La API le pide a Mercado Pago una preferencia de pago y devuelve el link.
+5. La persona paga en Mercado Pago.
+6. Mercado Pago avisa a `POST /api/webhooks/mercadopago`. El servidor verifica la firma, consulta el pago y llama a `confirmar_pago`, que marca el pedido como pagado y descuenta el stock.
+7. La página `/seguimiento/<código>` lee el pedido actualizado y lo muestra.
 
 La lógica de negocio vive en funciones puras de `lib/` (carrito, órdenes, filtros, recomendación y validaciones). La usan el navegador y el servidor, y es lo que prueban los tests unitarios.
 
@@ -104,6 +177,67 @@ En el plan gratis, Supabase pausa el proyecto después de 7 días sin uso: el wo
 | `resenas` | Reseñas de cada producto. |
 | `profiles` | Un perfil por usuario de Supabase Auth, con su `role` (`cliente` o `admin`). |
 | `ordenes` / `orden_items` | Pedidos (código de seguimiento, email, envío, medio de pago, montos y estado) y sus líneas (con la molienda y el nombre del producto al comprarlo). |
+
+```mermaid
+erDiagram
+  auth_users ||--|| profiles : "tiene"
+  auth_users |o--o{ ordenes : "compra (opcional: se puede sin cuenta)"
+  productos ||--o{ variantes : "tiene"
+  productos ||--o{ resenas : "tiene"
+  ordenes ||--|{ orden_items : "incluye"
+  variantes ||--o{ orden_items : "se vende en"
+  productos {
+    bigint id PK
+    text categoria "cafe | accesorio"
+    text slug "único"
+    text perfil "frutal | equilibrado | intenso"
+    smallint acidez "1 a 5"
+    bool activo
+  }
+  variantes {
+    bigint id PK
+    bigint producto_id FK
+    int peso_gramos
+    int precio
+    int stock
+  }
+  ordenes {
+    bigint id PK
+    text codigo "OC-XXXXXXXXXX, único"
+    uuid user_id FK "null si compró sin cuenta"
+    text estado
+    int total
+  }
+  orden_items {
+    bigint id PK
+    bigint orden_id FK
+    bigint variante_id FK
+    text molienda
+    int cantidad
+    int precio_unitario
+  }
+```
+
+`mensajes` (formulario de contacto) no se relaciona con otras tablas.
+
+**Cómo se organiza la información:**
+
+- **Producto y variante separados:** el café es el producto y cada peso es una variante con su precio y su stock.
+- **Cafés y accesorios en la misma tabla**, con `categoria`: los campos de café quedan `null` en los accesorios y un `CHECK` exige que un café los tenga completos.
+- **El pedido guarda una copia** del precio (`precio_unitario`) y del nombre (`descripcion`) de cada línea: si mañana cambia el precio, el pedido viejo sigue diciendo lo que se cobró.
+- **Relaciones con clave foránea.** Borrar un producto borra sus variantes y reseñas (`on delete cascade`). Una variante que ya se vendió no se puede borrar: la clave de `orden_items` lo impide, y por eso conviene ocultar el producto.
+
+**Consultas y operaciones:**
+
+- **Lecturas:** con `supabase-js`, que arma la consulta SQL (`select`, `eq`, `in`, `order`, `range`) y trae las relaciones anidadas en un solo pedido, por ejemplo `productos` con `variantes(*)` y `resenas(*)`.
+- **Altas, bajas y modificaciones:** las hace el panel admin a través de la API, con la sesión del admin, así que RLS vuelve a controlar.
+- **La operación crítica**, pagar y descontar stock, es la función SQL `confirmar_pago`. Bloquea la fila del pedido, controla el estado y descuenta todo en una sola transacción. Si falla algo, no se aplica nada; si se llama dos veces, la segunda no hace nada.
+
+**Validación en tres capas:**
+
+1. El navegador valida antes de enviar.
+2. La API vuelve a validar con la misma función de `lib/`.
+3. La base rechaza cualquier valor fuera de regla con `CHECK`: valores de una lista (perfil, tostado, molienda, estado), rangos (acidez de 1 a 5, stock ≥ 0) y largos máximos.
 
 **Seguridad (RLS):** cualquiera puede ver los productos activos, sus variantes y reseñas; solo un admin los modifica. Cada usuario ve únicamente su perfil y sus órdenes. Los pedidos los crea y actualiza solo el servidor, con la clave secreta. Un usuario puede cambiar su nombre, pero no su `role`.
 
@@ -395,4 +529,4 @@ playwright.config.js cómo se levanta la tienda para los E2E (base de prueba, pu
 - **Una sola validación para el navegador y el servidor** (`lib/auth.js`, `lib/validacion-producto.js`, `lib/validacion-checkout.js`, `lib/validacion-contacto.js`, `lib/recomendacion.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
 - **Se compra sin cuenta**, con un código de seguimiento: menos pasos para comprar. La clave secreta de Supabase se usa solo en el servidor, para lo que no depende de una sesión (crear pedidos, el webhook y el seguimiento por código).
 
-El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md) y el recorrido de la presentación en [`docs/guion-demo.md`](docs/guion-demo.md).
+El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md) y el guion de la exposición oral (10 minutos) en [`docs/guion-demo.md`](docs/guion-demo.md).
