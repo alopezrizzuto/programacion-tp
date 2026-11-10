@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { OPCIONES_COOKIES } from "./lib/supabase/cookies.js";
 
 // Proxy: corre antes de las páginas que usan la sesión (ver matcher).
 // La sesión de Supabase vence cada una hora; acá se renueva y se guardan
@@ -11,6 +12,7 @@ export async function proxy(request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
+      cookieOptions: OPCIONES_COOKIES,
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -19,7 +21,7 @@ export async function proxy(request) {
           // Las cookies nuevas van al pedido (para la página) y a la respuesta (para el navegador)
           cookiesNuevas.forEach(({ name, value }) => request.cookies.set(name, value));
           respuesta = NextResponse.next({ request });
-          cookiesNuevas.forEach(({ name, value, options }) => respuesta.cookies.set(name, value, options));
+          cookiesNuevas.forEach(({ name, value, options }) => respuesta.cookies.set(name, value, { ...options, ...OPCIONES_COOKIES }));
           // Que ningún caché guarde una respuesta con la sesión de otro usuario
           Object.entries(encabezados).forEach(([nombre, valor]) => respuesta.headers.set(nombre, valor));
         },

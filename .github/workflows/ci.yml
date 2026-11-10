@@ -3,6 +3,9 @@ on:
   pull_request:
   push:
     branches: [main]
+# Los jobs solo leen el repo: el token de GitHub no puede escribir nada (auditoría de seguridad)
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest

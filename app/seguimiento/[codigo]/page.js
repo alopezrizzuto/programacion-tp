@@ -5,6 +5,10 @@ import { crearClienteSecreto } from "@/lib/supabase/secreto";
 import { ESTADOS, FORMATO_CODIGO, PASOS_SEGUIMIENTO } from "@/lib/ordenes";
 import { DATOS_TRANSFERENCIA, PROMOS, formatearPrecio } from "@/lib/tienda";
 
+// Siempre se arma en el momento y nunca se guarda en caché: muestra datos personales del pedido.
+// (Auditoría: antes esto dependía de que la página leyera searchParams; ahora es explícito.)
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }) {
   return { title: `Pedido ${(await params).codigo}`, robots: { index: false } };
 }
