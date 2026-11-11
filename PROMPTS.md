@@ -1,6 +1,6 @@
 # Bitácora de prompts
 
-Registro de los prompts mas importantes usados con IA durante el proyecto. Los marcados con ⭐ son los mas interesantes para la presentación (errores, fallos, decisiones importantes).
+Registro de los prompts usados con IA durante el proyecto. Los marcados con ⭐ son interesantes para la presentación (errores, fallos, decisiones importantes).
 
 **Formato de cada entrada**
 - **Fecha / herramienta** (claude.ai, Claude Code)
@@ -22,6 +22,7 @@ Registro de los prompts mas importantes usados con IA durante el proyecto. Los m
 ## 3. ⭐ Cambio de idea base: de manteles a café — 29/09/2026 (Claude Code)
 **Prompt:** Le pedí cambiar la idea base del proyecto a una tienda de café de especialidad y actualizar `CLAUDE.md`, la portada y la bitácora, explicando antes qué archivos iba a tocar.
 **Resultado:** Cambio de idea base de manteles a café de especialidad. Se definieron 3 perfiles con 2 cafés cada uno, variantes por peso y molienda como opción del pedido (no variante) para evitar 90 combinaciones de stock. Se agregó el cuestionario "Elegí tu café" como parte de E3. Nombre provisorio de la tienda: "Origen Café".
+
 ## 4. ⭐ El webhook respondía 405 — 22/10/2026 (Claude Code)
 **Prompt (textual):** Pegué la respuesta del simulador de Mercado Pago ("405 - Method Not Allowed. Tu servidor reconoce el recurso solicitado pero el método HTTP de solicitud no es reconocido.") y escribí: "No aparece nada. Hay otra forma de solucionarlo? Ya me habian advertido que habia problemas con las cuentas de prueba de Mercado Pago."
 **Resultado:** El problema no eran las cuentas de prueba. La URL del webhook tenía solo el dominio, así que el aviso le pegaba a la portada, que no acepta POST. Se corrigió a `/api/webhooks/mercadopago` y respondió 200.
@@ -51,6 +52,61 @@ Registro de los prompts mas importantes usados con IA durante el proyecto. Los m
 **Resultado:** La primera ejecución había funcionado (se cerró la ventana, pero se aplicó). Se verificó con una consulta a `pg_constraint` que estaban las 8 restricciones.
 
 ---
+
+Antes de mergear, verificá que el PR tenga todos los commits.
+
+---
+
+Error: el borrado de app/login se coló en el primer commit, porque lo había preparado antes con git rm. Como no estaba subido, deshice ese commit y lo rehice con los archivos correctos.
+
+Lección: antes de commitear, revisar con git diff --cached qué está preparado.
+
+Error: al ajustar con sed la regla que valida la URL de la foto, se perdió una barra invertida (\) de la expresión regular, y el código quedó mal escrito. Lo detecté al revisarlo y lo corregí con Edit antes de commitear. Lección: para cambios con caracteres especiales, editar el archivo directo y no usar la terminal.
+
+Prueba automática que fallaba sin error de la app: la prueba esperaba a que la red quedara quieta, y Next precarga páginas en segundo plano, así que eso nunca pasaba. Además, esperaba un tiempo fijo en lugar de la respuesta del servidor. Lo corregí en el script; la app no tenía errores.
+
+---
+
+El proyecto de Supabase se pausó por una semana sin actividad, y con eso se cayó también la tienda publicada. Solución: el workflow diario que lo mantiene activo.
+
+Me equivoqué al escribir un await dentro de una función que no era async (en la página de pedidos del admin). El build lo detectó y lo corregí.
+
+Mercado Pago bloqueó al navegador automático ("Hubo un error accediendo a esta página") porque se identificaba como HeadlessChrome. Con un navegador normal funcionó.
+
+"Una de las partes con la que intentás hacer el pago es de prueba": en el sandbox, el email del comprador tiene que ser test_user_…@testuser.com. Queda documentado en el README.
+
+Git Bash rompe las tildes al mandar JSON con curl (por ejemplo, "Ciudad Autónoma"). Para probar la API conviene usar scripts de Node.
+
+La URL del webhook en Mercado Pago estaba mal: tenía una dirección distinta a la de producción. Ya la corregiste.
+
+Las direcciones de Vercel con -itba5 y las de cada deploy piden login, así que Mercado Pago no las puede usar. Hay que usar siempre el dominio de producción.
+
+La URL del webhook en Mercado Pago tenía solo el dominio, sin /api/webhooks/mercadopago, y por eso daba 405 y los avisos nunca llegaban. Para detectarlo, mandé un POST a cada dirección posible y comparé las respuestas.
+
+Accesorios en celular: en tarjetas de dos columnas, las estrellas se pisaban con la tarjeta de al lado. Lo detecté en las capturas y las pasé debajo del nombre.
+
+Rendimiento de la portada: la animación de entrada del título bajaba el rendimiento a 82. Lección: lo primero que hay que leer no se anima.
+
+Con "reducir movimiento", en compu la imagen fija se estiraba a 1798 px, porque el alto de pantallas grandes le ganaba al automático. Lo detecté midiendo el tamaño en el navegador y lo corregí.
+
+Esta vez revisé qué estaba preparado antes de cada commit y no filtré la salida con grep. No se repitió el error de los commits mezclados.
+
+La primera versión del hero era un video común, que se reproducía solo y con las tomas equivocadas. La molienda salía de la cafetera y faltaba el molinillo. Se corrigió a un video que avanza con el scroll y con las tomas reales.
+
+Modifiqué los archivos del video antes de crear la rama nueva, estando todavía en la rama ya mergeada. Lo deshice y lo rehice en la rama correcta, sin pérdidas.
+
+La primera versión dejaba la barra lateral fija al bajar. Como mide más que la pantalla, quedaba cortada abajo. Le saqué el sticky y ahora baja con la página y se ve entera.
+
+Un test E2E fallaba porque Next agrega un aviso oculto que también usa role="alert"; corregí el selector del test, la app estaba bien.
+
+Una edición masiva con sed cambió los saltos de línea de 7 archivos de lib/ que no tocaba. El contenido era idéntico, pero Git los marcaba como modificados. Los restauré antes de commitear y no entraron en ningún commit.
+
+Los validadores de la skill no corren en Windows, así que armé un envoltorio que aplica exactamente sus mismas reglas. Quedó registrado como desvío en run-metadata.json.
+
+Empecé a sacarle a es_admin() el permiso de ejecución para anónimos y lo quité antes de commitear. Las políticas de lectura pública podían llamarla y romper el catálogo, y además no tenía efecto real porque el permiso viene de PUBLIC.
+---
+
+
 
 Antes de mergear, verificá que el PR tenga todos los commits.
 
