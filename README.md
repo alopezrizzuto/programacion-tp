@@ -533,4 +533,4 @@ playwright.config.js cómo se levanta la tienda para los E2E (base de prueba, pu
 - **Una sola validación para el navegador y el servidor** (`lib/auth.js`, `lib/validacion-producto.js`, `lib/validacion-checkout.js`, `lib/validacion-contacto.js`, `lib/recomendacion.js`): el navegador avisa antes de enviar, y el servidor no confía en lo que llega.
 - **Se compra sin cuenta**, con un código de seguimiento: menos pasos para comprar. La clave secreta de Supabase se usa solo en el servidor, para lo que no depende de una sesión (crear pedidos, el webhook y el seguimiento por código).
 
-El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md) y el guion de la exposición oral (10 minutos) en [`docs/guion-demo.md`](docs/guion-demo.md), con los conceptos que se nombran explicados en [`docs/conceptos.md`](docs/conceptos.md).
+El historial de decisiones y prompts está en [`PROMPTS.md`](PROMPTS.md), el contexto completo del proyecto en [`CLAUDE.md`](CLAUDE.md) y el guion de la exposición oral (10 minutos) en [`docs/guion-demo.md`](docs/guion-demo.md).

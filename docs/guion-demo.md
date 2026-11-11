@@ -1,6 +1,6 @@
 # Guion de la exposición: Origen Café (10 minutos)
 
-Sigue la consigna de la exposición oral y las diapositivas, una por una. Cada diapositiva tiene las mismas notas en el modo presentación. Al final están las 12 preguntas más probables. Los conceptos que se nombran están explicados en [conceptos.md](conceptos.md), y el detalle técnico, en el [README](../README.md).
+Sigue la consigna de la exposición oral y las diapositivas, una por una; cada diapositiva tiene las mismas notas en el modo presentación. Cada término técnico que se nombra se define en voz alta en la misma frase (en **negrita**). Al final están las preguntas probables sobre lo que no se nombra.
 
 | Tiempo | Diapositivas | Qué pide la consigna |
 |---|---|---|
@@ -14,6 +14,38 @@ Sigue la consigna de la exposición oral y las diapositivas, una por una. Cada d
 
 Si vas atrasado, salteá la 13 (la firma).
 
+## Las palabras que definís en voz alta
+
+Son las únicas que hay que saber explicar de memoria. Cada una se dice una vez, con su definición.
+
+| Palabra | Lo que decís |
+|---|---|
+| Hero | La primera pantalla de la página. |
+| Responsive | Se adapta al tamaño de la pantalla. |
+| Variante | Cada tamaño de bolsa, con su propio precio y stock. |
+| API | Las direcciones `/api` que reciben pedidos del navegador y responden con datos. |
+| SQL directo | SQL es el lenguaje de las bases de datos; "directo" es que las tablas las escribo yo, en archivos. |
+| Agente (Claude Code) | Una IA que trabaja dentro del proyecto: edita archivos y corre comandos. |
+| `CLAUDE.md` | El archivo con las reglas que el agente lee al empezar. |
+| Skill | Un paquete de instrucciones listas para una tarea. |
+| PR | Una propuesta de cambio que se revisa antes de sumarla. |
+| fetch | Pedirle datos al servidor sin recargar la página. |
+| Webhook | Una dirección mía a la que Mercado Pago avisa cuando cambia un pago. |
+| Firma | Un código que solo Mercado Pago y yo podemos calcular: si coincide, el aviso es auténtico. |
+| JSON | El formato de datos de la web. |
+| 1 a N | Uno a muchos: un producto tiene muchas variantes. |
+| Migraciones y seed | Los archivos `.sql` que crean las tablas, y el que carga los datos iniciales. |
+| CRUD | Alta, lectura, modificación y baja. |
+| Transacción | O pasan todas las operaciones juntas, o ninguna. |
+| CHECK | Reglas que la base revisa antes de guardar. |
+| RLS | Reglas dentro de la base que deciden quién puede ver o cambiar cada fila. |
+| Reducir movimiento | Una opción para personas a las que las animaciones les molestan. |
+| Playwright | Abre un navegador real y lo usa como una persona, para probar. |
+| 405 / 401 | "Esta dirección no acepta este tipo de pedido" / "no autorizado". |
+| CSRF | Otra página usa tu navegador para mandarle un pedido a mi tienda. |
+| Tests unitarios y de compras completas | Los unitarios prueban funciones sueltas; los otros abren un navegador y simulan una compra. |
+| CI/CD | En cada PR, GitHub corre solo los tests, y Vercel publica una copia para probarla. |
+
 ## Antes de empezar
 
 - [ ] **Ventana 1, incógnito:** https://programacion-tp-black.vercel.app, sin sesión (cliente).
@@ -24,7 +56,7 @@ Si vas atrasado, salteá la 13 (la firma).
   - usuario y contraseña del **comprador de prueba** de Mercado Pago. Hay que ingresar con él: como invitado, Mercado Pago rechaza el pago;
   - tarjeta `5031 7557 3453 0604`, `11/30`, código `123`, DNI `12345678`;
   - titular `APRO`.
-- [ ] **Plan B:** si Mercado Pago tarda o falla, pagar por **transferencia** y confirmar desde el admin. Usa la misma función `confirmar_pago` que el webhook.
+- [ ] **Plan B:** si Mercado Pago tarda o falla, pagar por **transferencia** y confirmar desde el admin. Hace lo mismo que el aviso de Mercado Pago.
 - [ ] **Reloj a la vista:** la demo va de 3:05 a 6:05, sin pasarse.
 
 ## Diapositiva por diapositiva
@@ -35,45 +67,46 @@ Si vas atrasado, salteá la 13 (la firma).
 **2 · Qué es Origen Café** (0:10 – 0:45)
 - "Vende 6 cafés en tres tamaños de bolsa, más accesorios. La molienda se elige al comprar. Se compra sin cuenta, solo con el email, con Mercado Pago o transferencia con 10% de descuento."
 - Lo distintivo, una frase por tarjeta:
-  - el test que recomienda café y molienda;
-  - el hero donde el video avanza con el scroll;
-  - los packs con descuento;
-  - el código para seguir el pedido.
-- Señalar el celular: "Y es responsive: esta es la misma portada en el celular."
+  - "el test que recomienda café y molienda;"
+  - "el **hero, que es la primera pantalla**, donde el video avanza con el scroll;"
+  - "los packs con descuento;"
+  - "y un código para seguir el pedido."
+- Señalar el celular: "Y es **responsive, o sea que se adapta al tamaño de la pantalla**: esta es la misma portada en el celular."
 
 **3 · De la solución inicial a la final** (0:45 – 1:15, solo tres filas)
-- **Molienda:** "La alternativa era hacerla variante, pero serían 90 combinaciones con stock propio. Como opción del pedido son 18 variantes."
-- **Test:** "Empezó calculándose en el navegador y pasó a una API, para validar en el servidor."
+- **Molienda:** "Una **variante es cada tamaño de bolsa, con su precio y su stock**. La alternativa era que la molienda también fuera variante, pero serían 90 combinaciones con stock propio. Como opción del pedido son 18 variantes."
+- **Test:** "Empezó calculándose en el navegador y pasó al servidor, que es donde no se puede modificar."
 - **Compra:** "Al principio solo Mercado Pago; al final, sin cuenta, con código de seguimiento y también transferencia."
 
 **4 · Tecnologías** (1:15 – 1:50, no leer fila por fila)
-- **Next.js:** "Páginas y API en un solo proyecto. Las páginas leen la base en el servidor, sin exponer claves."
-- **Supabase:** "La consigna pedía SQL directo. Es Postgres, con login, fotos y permisos dentro de la base."
-- **Mercado Pago Checkout Pro:** "La tarjeta nunca pasa por mi tienda. Lo integré con fetch, sin SDK: son dos pedidos HTTP."
-- **Vercel y GitHub Actions:** "Deploy automático y una preview por cada PR."
+- **Next.js:** "Páginas y API en un solo proyecto. La **API son las direcciones `/api` que reciben pedidos del navegador y responden con datos**. Las páginas se arman en el servidor, así las claves nunca llegan al navegador."
+- **Supabase:** "La consigna pedía **SQL directo: SQL es el lenguaje de las bases de datos, y 'directo' quiere decir que las tablas las escribo yo, en archivos**. Supabase es una base Postgres con login, fotos y permisos incluidos."
+- **Mercado Pago Checkout Pro:** "La persona paga en la página de Mercado Pago, así que la tarjeta nunca pasa por mi tienda."
+- **Vercel y GitHub Actions:** "Vercel publica la tienda sola; GitHub Actions corre los controles automáticos en cada cambio."
 
 **5 · Herramientas de IA** (1:50 – 2:15)
-- "claude.ai para planificar; Claude Code como agente en el repo, con reglas en `CLAUDE.md`; Higgsfield para las fotos y el video; y la skill de Cloudflare para la seguridad."
-- **Cómo revisé lo que hizo la IA** (lo pide la consigna): "Primero el plan y mi OK; después una rama y un PR, el CI en verde y la prueba en el navegador. Nada entró sin eso."
+- "claude.ai para planificar. Claude Code es un **agente: una IA que trabaja dentro del proyecto, edita archivos y corre comandos**. Sus reglas están en un archivo, **`CLAUDE.md`, que lee al empezar**."
+- "Higgsfield para las fotos y el video. Y una **skill** de Cloudflare, que es **un paquete de instrucciones listas** para auditar la seguridad."
+- **Cómo revisé** (lo pide la consigna): "Primero el plan y mi OK. Después cada cambio en una rama y un **PR, o sea una propuesta que se revisa antes de sumarla**; los tests automáticos en verde, y la prueba en el navegador."
 
 **6 · Arquitectura** (2:15 – 2:45)
-- "El navegador nunca escribe directo en la base: todo pasa por mi API, que vuelve a validar."
-- "Las páginas leen el catálogo en el servidor, con la clave pública limitada por RLS."
-- Flecha punteada: "Mercado Pago avisa a mi webhook cuando cambia un pago."
+- "El navegador nunca escribe directo en la base: todo pasa por la API, que vuelve a validar. El navegador le habla con **fetch, que es pedirle datos al servidor sin recargar la página**."
+- "Las páginas leen el catálogo en el servidor con la clave pública, que está limitada por permisos dentro de la base."
+- Flecha punteada: "Y el **webhook es una dirección mía a la que Mercado Pago me avisa cuando cambia un pago**."
 
 **7 · Recorrido de una compra** (2:45 – 3:05, remarcar dos pasos)
-- **Paso 3:** "El precio sale de la base, nunca del navegador."
-- **Paso 6:** "No le creo al aviso: verifico la firma y le pregunto el pago a Mercado Pago. Recién ahí confirmo y descuento el stock."
+- **Paso 3:** "El precio sale de la base, nunca del navegador. Aunque alguien cambie un precio en su navegador, se cobra el real."
+- **Paso 6:** "No le creo al aviso así nomás: verifico la **firma, que es un código que solo Mercado Pago y yo podemos calcular**, y además le pregunto el pago a Mercado Pago. Recién ahí confirmo y descuento el stock."
 - Transición: "Ahora lo muestro en vivo."
 
 **8 · Demo en vivo** (3:05 – 6:05)
 1. **Portada (20 s):** bajar por el hero.
 2. **Test (25 s):**
    - tocar "Ver mi café" sin responder: "Valida y dice qué falta";
-   - responder Fuerte, Poco, Con leche y Espresso: "Lo calcula el servidor: el formulario consulta la API con fetch."
+   - responder Fuerte, Poco, Con leche y Espresso: "Lo calcula el servidor: el formulario le pregunta a la API con fetch, sin recargar la página."
 3. **Catálogo (25 s):**
-   - en `/productos`, filtrar Frutales: "Los filtros quedan en la URL";
-   - abrir `/api/productos?perfil=intenso`: "La misma búsqueda, en la API, en JSON."
+   - en `/productos`, filtrar Frutales: "Los filtros quedan en la dirección: se puede compartir el link";
+   - abrir `/api/productos?perfil=intenso`: "La misma búsqueda en la API: devuelve los datos crudos, en **JSON, que es el formato de datos de la web**."
 4. **Carrito y pago (80 s):**
    - Colombia Huila 250 g, molienda Media, pack de 2 (−10%);
    - "Finalizar compra" con el formulario vacío, para mostrar los errores por campo;
@@ -85,78 +118,84 @@ Si vas atrasado, salteá la 13 (la firma).
    - cambiar un stock.
 
 **9 · Base de datos: tablas y relaciones** (6:05 – 6:35)
-- "Producto y variante van separados: cada peso tiene su precio y su stock. Cafés y accesorios comparten tabla, con `categoria`."
+- "**1 a N quiere decir uno a muchos**: un producto tiene muchas variantes, y un pedido, muchos ítems."
+- "Producto y variante separados: cada peso tiene su precio y su stock. Cafés y accesorios comparten tabla."
 - "El ítem del pedido guarda una copia del precio, para que el historial no cambie si mañana cambia el precio."
 - Flecha punteada: "Un pedido puede no tener usuario, porque se compra sin cuenta."
+- Abajo: "Las tablas no se crean a mano en Supabase: están en **archivos `.sql` guardados en Git, las migraciones**. El **seed carga los datos iniciales**."
 
 **10 · Operaciones, validación y permisos** (6:35 – 7:05)
-- **CRUD:** "El admin da de alta, edita y borra productos y variantes por la API; lo vieron en la demo."
-- **Validación:** "Se valida tres veces, porque el navegador se puede modificar: en el navegador, en la API con la misma función y en la base con `CHECK`."
-- **`confirmar_pago`:** "Si Mercado Pago avisa dos veces, la segunda no hace nada."
-- **RLS:** "Son reglas dentro de Postgres. Funcionan aunque alguien use la clave pública directo contra Supabase."
+- **CRUD:** "El admin hace el **CRUD completo, o sea alta, lectura, modificación y baja** de productos y variantes; lo vieron en la demo."
+- **Confirmar el pago:** "Es una **transacción: o pasan las dos cosas, descontar stock y marcar pagado, o ninguna**. Si Mercado Pago avisa dos veces, la segunda no hace nada."
+- **Validación:** "Se valida tres veces porque el navegador se puede modificar. La última es **CHECK: reglas que la base revisa antes de guardar**."
+- **RLS:** "**RLS son reglas dentro de la base que deciden quién puede ver o cambiar cada fila**. Funcionan aunque alguien entre directo a Supabase con la clave pública."
 
 **11 · Peor prompt: el hero** (7:05 – 7:40)
 - **Qué pasaba:** "Pedí 'un hero interactivo con video' y tres veces salió un video en un recuadro."
 - **Por qué fue el peor:** "Describía la cosa, no el comportamiento."
-- **La causa escondida:** "Tenía apagados los efectos de animación de Windows. Eso activa 'reducir movimiento' en el navegador, y yo veía la versión alternativa, la del recuadro."
+- **La causa escondida:** "Tenía apagados los efectos de animación de Windows. Eso activa '**reducir movimiento', una opción para personas a las que las animaciones les molestan**, y yo veía la versión alternativa, la del recuadro."
 - **Qué cambió:** "Cuando escribí 'que al scrollear avance la imagen y ocupe toda la pantalla', salió bien."
-- **Cómo se revisó:** "Con Playwright y en el navegador, antes de cada commit."
+- **El código:** "Antes, con reducir movimiento, mostraba un video común. Ahora el video siempre se acerca de a poco al punto del scroll."
+- **Cómo se revisó:** "Con **Playwright, que abre un navegador real y lo usa como una persona**, y probándolo yo."
 
 **12 · Mejor prompt: el webhook que respondía 405** (7:40 – 8:10)
 - **Qué pasaba:** "Mercado Pago no lograba avisarme los pagos."
-- **Por qué fue el mejor:** "En vez de describirlo, pegué la respuesta exacta del error: 405. Yo sospechaba de las cuentas de prueba."
-- **La causa:** "La URL del webhook tenía solo el dominio: el aviso le pegaba a la portada, que no acepta POST."
+- **Por qué fue el mejor:** "En vez de describirlo, pegué la respuesta exacta del error. **405 quiere decir 'esta dirección no acepta este tipo de pedido'**. Yo sospechaba de las cuentas de prueba."
+- **La causa:** "La dirección del webhook tenía solo el dominio: el aviso le llegaba a la portada, que no recibe avisos."
 - **Aprendizaje:** "El error textual vale más que mi interpretación."
 
 **13 · El webhook, segunda parte: la firma** (8:10 – 8:30, **extra**: saltear si vas atrasado)
-- "Con la URL corregida, los avisos llegaban, pero la firma nunca coincidía. Puse un log temporal y se lo pasé a Claude."
-- **La causa:** "En el sandbox, el pago lo firma la cuenta vendedor de prueba, con una clave que no tengo."
-- **La solución no apaga la seguridad:** "Le pregunto el pago a Mercado Pago con mi token y verifico estado, pedido y monto. Con credenciales reales, la firma se exige."
+- "Con la dirección corregida, los avisos llegaban, pero la firma nunca coincidía. Hice que el servidor anotara qué llegaba y se lo pasé a Claude."
+- **La causa:** "En el modo prueba, el aviso lo firma la cuenta vendedora de prueba, con una clave que yo no tengo. Por eso el servidor lo rechazaba con **401, que es 'no autorizado'**."
+- **El código:** "Antes, firma inválida era rechazo. Ahora, en modo prueba, sigue: busca el pago en Mercado Pago y decide según lo que responde."
+- "No apagué la seguridad: verifico que el pago esté aprobado, que sea de ese pedido y que el monto sea exacto. Con cuentas reales, la firma se exige."
 
-**14 · Auditoría de seguridad: login CSRF** (8:30 – 9:00)
-- "Cuatro palabras alcanzaron porque la skill trae el método. Lanzó 40 agentes: ninguna vulnerabilidad confirmada y 7 pistas, todas arregladas con su test."
-- **La más importante:** "Otra página podía mandar un formulario oculto a mi login y dejarte logueado en la cuenta del atacante."
-- **El arreglo:** "Ahora rechazo los pedidos de otro sitio (403) y los que no son JSON (415)."
+**14 · Auditoría: otra página podía loguearte en una cuenta ajena** (8:30 – 9:00)
+- **El prompt:** "Cuatro palabras alcanzaron porque la skill ya trae el método. Encontró 7 pistas y las arreglé todas, cada una con su test."
+- **La más importante:** "Otra página podía mandar un formulario oculto a mi login y dejarte logueado en la cuenta del atacante. Lo que compraras quedaba en su cuenta. Este ataque se llama **CSRF: otra página usa tu navegador para mandarle un pedido a mi tienda**."
+- **El arreglo:** "Antes leía el pedido sin mirar de dónde venía. Ahora primero reviso que venga de mi propia página y en el formato que usa mi tienda; si no, lo rechazo."
 
 **15 · Otras dificultades** (9:00 – 9:20, contar dos)
-- **Supabase:** "En el plan gratis se pausa a los 7 días sin uso, y se cayó la tienda. Lo resolví con una consulta diaria desde GitHub Actions."
-- **Tests E2E:** "No podían escribir en la base real. Usan un proyecto de Supabase aparte, que se prepara y se limpia solo."
+- **Supabase:** "En el plan gratis se pausa a los 7 días sin uso, y se cayó la tienda. Lo resolví con una tarea automática de GitHub que consulta la base todos los días."
+- **Tests:** "Los tests que simulan compras crean pedidos y cuentas, así que no podían correr contra la base real. Usan un proyecto aparte, que se prepara y se limpia solo."
 
 **16 · Limitaciones y calidad** (9:20 – 9:45)
 - "Son decisiones de alcance. El stock no se reserva al crear el pedido, para que uno abandonado no bloquee bolsas; a cambio, puede haber una sobreventa."
-- "Todo pasó por PR con checklist, CI y preview: más de 25 PRs, 70 tests unitarios y 51 de punta a punta."
+- "Más de 25 PRs. En cada uno, GitHub corre solo los tests: **70 unitarios, que prueban funciones sueltas como el cálculo del carrito, y 51 que abren un navegador y simulan compras completas**. Y Vercel publica una copia del PR para probarlo antes de sumarlo. Eso es el **CI/CD** que pide la consigna."
 
 **17 · Gracias** (9:45 – 10:00)
 - "Gracias. ¿Preguntas?"
 
-## Las 12 preguntas más probables
+## Si te preguntan
 
-**1. ¿Qué es un Server Component y qué uno de cliente?** El Server Component se ejecuta en el servidor, puede leer la base y manda el HTML listo: así son las páginas del catálogo. El de cliente (`"use client"`) corre en el navegador, con estado y clicks: el carrito, los filtros, los formularios y el hero.
+Cosas que no se nombran, pero que pueden salir en las preguntas.
 
-**2. ¿Qué pasa si alguien cambia el precio en el navegador?** Nada. El carrito guarda solo variante, molienda y cantidad. Al crear el pedido, el servidor busca los precios en la base y recalcula todo. Hay un test que manda un precio falso y verifica que se ignora.
+**1. ¿Cómo que "las páginas se arman en el servidor"?** En Next.js, las páginas son por defecto *Server Components*: se ejecutan en el servidor, leen la base y mandan el HTML listo. Las partes con clicks (carrito, filtros, formularios) son componentes de cliente y corren en el navegador.
 
-**3. ¿Qué es RLS?** *Row Level Security*: reglas dentro de Postgres que deciden qué filas puede ver o cambiar cada usuario. Por ejemplo, "cada cliente ve solo sus pedidos" y "solo el admin modifica productos". Funcionan aunque alguien use la clave pública directo contra Supabase.
+**2. ¿Next.js y React no son lo mismo?** React arma la interfaz con componentes. Next.js es un framework sobre React que agrega las rutas (cada carpeta es una página), la API y armar las páginas en el servidor.
 
-**4. ¿Clave pública y clave secreta?** La pública va al navegador y la limita RLS. La secreta saltea RLS y solo vive en el servidor: crea los pedidos sin cuenta y la usan el webhook y el seguimiento. No empieza con `NEXT_PUBLIC_`, así que nunca llega al navegador.
+**3. ¿Dónde se guarda el carrito?** En el `localStorage` del navegador, un espacio que sobrevive al cerrar la pestaña. Se guarda solo qué variante, qué molienda y cuántas; nunca precios.
 
-**5. ¿Cómo sabés que el aviso del webhook es real?** Por la firma HMAC y, sobre todo, porque le pregunto el pago a Mercado Pago con mi token. Confirmo solo si está aprobado, es de ese pedido y el monto coincide. Un aviso inventado no tiene un pago real detrás.
+**4. ¿Qué es la clave pública y la secreta?** La pública va al navegador y la limitan los permisos (RLS). La secreta saltea esos permisos y solo vive en el servidor. La usa, por ejemplo, para crear pedidos de quien compra sin cuenta.
 
-**6. ¿Y si Mercado Pago avisa dos veces?** `confirmar_pago` bloquea la fila del pedido y solo actúa si está pendiente o rechazado. La segunda vez no hace nada: es idempotente, así que el stock no baja dos veces.
+**5. ¿Qué pasa si Mercado Pago avisa dos veces el mismo pago?** La función que confirma el pago primero bloquea el pedido y mira su estado: si ya está pagado, no hace nada. Así el stock no baja dos veces.
 
-**7. ¿Por qué el stock baja al pagar y no al crear el pedido?** Para que un pedido abandonado no bloquee bolsas. El costo es una posible sobreventa si dos personas pagan la última bolsa a la vez; la base no deja que el stock quede negativo. Con más tiempo, reservaría el stock por unos minutos.
+**6. ¿Por qué el stock baja al pagar y no al crear el pedido?** Para que un pedido abandonado no bloquee bolsas. El costo es que, si dos personas pagan la última bolsa a la vez, puede haber sobreventa. La base no deja el stock en negativo.
 
-**8. ¿Por qué la molienda no es una variante?** No cambia el precio ni el stock: el grano es el mismo. Como variante serían 90 combinaciones (6 cafés × 3 pesos × 5 moliendas) en lugar de 18.
+**7. ¿Cómo se protege el panel admin?** En tres lugares: la página revisa que tu usuario sea admin, la API lo vuelve a revisar, y la base (RLS) solo deja modificar productos al admin.
 
-**9. ¿Por qué se valida tres veces?** En el navegador, por comodidad: avisa rápido. En la API, por seguridad, porque el navegador se puede modificar. En la base, con `CHECK`, como última red si alguien saltea la API.
+**8. ¿Por qué la molienda no cambia el precio?** Porque el grano es el mismo: solo se muele distinto. Por eso no tiene stock propio.
 
-**10. ¿Qué es CSRF y cómo lo frenaste?** Otro sitio hace que tu navegador mande un pedido a mi tienda sin que te des cuenta. Rechazo los pedidos que vienen de otro origen (403) y los que no son JSON (415), porque un formulario HTML común no puede mandar JSON.
+**9. ¿Por qué se valida tres veces?** En el navegador, por comodidad (avisa rápido). En la API, por seguridad, porque el navegador se puede modificar. En la base, como última red.
 
-**11. ¿Qué es CI/CD y qué prueban los tests?** CI: en cada PR, GitHub Actions corre lint, 70 tests unitarios, el build y 51 E2E. CD: Vercel publica `main` solo y arma una preview por PR. Los unitarios prueban funciones sueltas (carrito, pedido, firma, filtros). Los E2E abren un Chrome real y compran como una persona, contra una base de prueba.
+**10. ¿Cómo funciona la recomendación? ¿Usa IA?** No usa IA, son reglas con puntaje: cada respuesta suma puntos a los cafés según su tostado, acidez y cuerpo. Se muestra el que más puntos tiene, con su porcentaje de coincidencia.
+
+**11. ¿Por qué no usaste el SDK de Mercado Pago?** El SDK es la biblioteca oficial. No hizo falta: son solo dos pedidos (crear el cobro y consultar un pago), y con `fetch` se ve exactamente qué se manda.
 
 **12. ¿Qué hiciste vos y qué hizo la IA?** La IA escribió la mayor parte del código. Yo:
 - definí qué se hacía y en qué orden, y aprobé cada plan;
 - probé todo en el navegador;
-- diagnostiqué con datos reales: el error 405 y los logs del webhook;
-- tomé las decisiones de compromiso, como no reservar stock o el modo sandbox.
+- encontré los problemas con datos reales: el error 405 y lo que llegaba al webhook;
+- tomé las decisiones, como no reservar stock o cómo verificar los pagos en modo prueba.
 
-Nada entró sin PR, CI en verde y prueba manual.
+Nada entró sin PR, tests en verde y prueba manual.
