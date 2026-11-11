@@ -1,6 +1,6 @@
 # Bitácora de prompts
 
-Registro de los prompts usados con IA durante el proyecto. Los marcados con ⭐ son interesantes para la presentación (errores, fallos, decisiones importantes).
+Registro de los prompts mas importantes usados con IA durante el proyecto. Los marcados con ⭐ son los mas interesantes para la presentación (errores, fallos, decisiones importantes).
 
 **Formato de cada entrada**
 - **Fecha / herramienta** (claude.ai, Claude Code)
@@ -22,6 +22,33 @@ Registro de los prompts usados con IA durante el proyecto. Los marcados con ⭐ 
 ## 3. ⭐ Cambio de idea base: de manteles a café — 29/09/2026 (Claude Code)
 **Prompt:** Le pedí cambiar la idea base del proyecto a una tienda de café de especialidad y actualizar `CLAUDE.md`, la portada y la bitácora, explicando antes qué archivos iba a tocar.
 **Resultado:** Cambio de idea base de manteles a café de especialidad. Se definieron 3 perfiles con 2 cafés cada uno, variantes por peso y molienda como opción del pedido (no variante) para evitar 90 combinaciones de stock. Se agregó el cuestionario "Elegí tu café" como parte de E3. Nombre provisorio de la tienda: "Origen Café".
+## 4. ⭐ El webhook respondía 405 — 22/10/2026 (Claude Code)
+**Prompt (textual):** Pegué la respuesta del simulador de Mercado Pago ("405 - Method Not Allowed. Tu servidor reconoce el recurso solicitado pero el método HTTP de solicitud no es reconocido.") y escribí: "No aparece nada. Hay otra forma de solucionarlo? Ya me habian advertido que habia problemas con las cuentas de prueba de Mercado Pago."
+**Resultado:** El problema no eran las cuentas de prueba. La URL del webhook tenía solo el dominio, así que el aviso le pegaba a la portada, que no acepta POST. Se corrigió a `/api/webhooks/mercadopago` y respondió 200.
+**Aprendizaje:** Pegar la respuesta exacta del error ayudó más que describirlo con mis palabras.
+
+## 5. ⭐ La firma del webhook nunca coincidía — 22/10/2026 (Claude Code)
+**Prompt (textual):** "Webhook con firma inválida: {"consulta":"?data.id=184531371541&type=payment", …, "claveCargada":true, …, "live_mode":true, "user_id":"3764306475"} No cargue la clave. Cargue una access token, y una webhook secret"
+**Resultado:** Un log temporal mostró qué llegaba exactamente: en el sandbox, los pagos los firma la cuenta vendedor de prueba, con una clave que no tenemos. Solución: `MERCADOPAGO_SANDBOX=true` deja seguir sin firma, y la seguridad la da consultarle el pago a Mercado Pago (aprobado, de ese pedido y con el monto exacto). Con credenciales reales, la firma se exige.
+**Aprendizaje:** Antes de cambiar código, agregar un diagnóstico para ver el dato real.
+
+## 6. ⭐ El hero: el peor prompt y cómo lo corregí — 01/10 al 28/10/2026 (Claude Code)
+**Prompts (textuales, en orden):**
+1. "Pagina de inicio: debe tener un efecto donde al scrollear hacia abajo, se mueve una imagen/video (…) que cubre toda la pantalla."
+2. "Hay un error de concepto. El Hero no debe ser un Hero de Video comun, donde el video se reproduce. Debe ser un Hero en el cual al scrollear, va pasando el video (…)"
+3. "El Hero sigue siendo un video (el video se corrigio, me gusta mas), pero no es lo que te pedi. Yo necesito que al scrollear vaya avanzando la iamgen. Que no sea un video en una cuadricula. Que ocupe la mayor parte de la pantalla, o toda, y cuando el usuario hace scroll hacia abajo, vaya avanzado la imagen (del video)."
+4. "Muy bueno. Me gustaria que el video del hero no se vea tan zoomeado, y que tampoco pierda calidad. Tambien, que el scroll no sea tan rapido, ya que el video no se termina de entender si el scroll se hace tan rapido."
+**Resultado:** Tenía apagados los "efectos de animación" de Windows, eso activa "reducir movimiento" en el navegador, y yo veía la versión alternativa: un video quieto en un recuadro. Ahora el video avanza con el scroll siempre, a pantalla grande, re-codificado con ffmpeg y con suavizado.
+**Aprendizaje:** Describir el comportamiento esperado, no el nombre del componente, y corregir con observaciones concretas. Cada versión se verificó con Playwright antes del commit.
+
+## 7. ⭐ Auditoría de seguridad — 09/11/2026 (Claude Code + skill de Cloudflare)
+**Prompt (textual):** "security audit this codebase"
+**Resultado:** 40 agentes revisaron el código: 0 vulnerabilidades confirmadas y 7 pistas. La más importante fue el login CSRF (otra página podía dejarte logueado en la cuenta de un atacante). Se arreglaron las 7, cada una con su test, en el PR `fix/seguridad`.
+**Aprendizaje:** Un prompt corto alcanza cuando la herramienta ya trae el método; lo importante fue revisar cada arreglo con tests antes de mergear.
+
+## 8. Migración 006 ejecutada dos veces — 10/11/2026 (Supabase)
+**Error (textual):** "Failed to run sql query: ERROR: 42710: constraint "ordenes_email_largo" for relation "ordenes" already exists"
+**Resultado:** La primera ejecución había funcionado (se cerró la ventana, pero se aplicó). Se verificó con una consulta a `pg_constraint` que estaban las 8 restricciones.
 
 ---
 
