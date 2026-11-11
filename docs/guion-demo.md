@@ -21,7 +21,7 @@ Sigue la consigna de la exposición oral. Son 10 minutos de exposición y demo e
   - Supabase Table Editor en `variantes`;
   - GitHub Actions con un CI en verde.
 - [ ] **Datos a mano:**
-  - email `test_user_123@testuser.com`;
+  - usuario y contraseña del **comprador de prueba** de Mercado Pago (hay que ingresar con él: como invitado, Mercado Pago rechaza el pago);
   - tarjeta `5031 7557 3453 0604`, `11/30`, código `123`, DNI `12345678`;
   - titular `APRO`.
 - [ ] Anotar el stock de **Colombia Huila 250 g** para mostrar que baja.

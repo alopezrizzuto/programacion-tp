@@ -86,7 +86,7 @@ Los valores viven en `lib/tienda.js` (un solo lugar para cambiarlos):
 - **Se compra sin cuenta** (lo pidió Agustín para facilitar la compra): alcanza con el email. Cada pedido tiene un **código de seguimiento** (`OC-` + 10 caracteres al azar) y se consulta en `/seguimiento`. Si hay sesión, el pedido también queda en Mis pedidos.
 - **Dos medios de pago:** Mercado Pago (**Checkout Pro**, redirección) o **transferencia** (10% OFF en los productos; el pedido queda pendiente y el admin confirma el pago en Pedidos).
 - **El stock se descuenta al confirmarse el pago** (webhook o admin), con la función SQL `confirmar_pago` en una transacción. No se reserva al crear el pedido.
-- **Sandbox de Mercado Pago:** se paga como invitado con tarjeta de prueba (titular APRO/OTHE) y un email `test_user_…@testuser.com`; no hace falta la cuenta de comprador de prueba.
+- **Sandbox de Mercado Pago:** desde noviembre, pagar como invitado da "Una de las partes… es de prueba". Hay que ingresar en Mercado Pago con una **cuenta de comprador de prueba** (creada en Developers → Cuentas de prueba) y pagar con la tarjeta de prueba (titular APRO/OTHE). Probado de punta a punta el 11/11 (pedido pagado por el webhook).
 
 ### Modelo de datos (inicial, puede ajustarse)
 - `profiles` (id → auth.users, nombre, role)
