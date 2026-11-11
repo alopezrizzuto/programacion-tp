@@ -294,11 +294,15 @@ Estados: pendiente → pagada → enviada → entregada (o rechazada / cancelada
 
 ### Probar un pago (sandbox)
 
-Con el Access Token de prueba y en una ventana de incógnito:
+Con las credenciales de prueba, el comprador también tiene que ser un **usuario de prueba con sesión iniciada**. Pagando como invitado, Mercado Pago rechaza el pago con *"Una de las partes con la que intentás hacer el pago es de prueba"*, aunque el email sea de prueba.
 
-1. En el checkout, usar un email con el formato `test_user_123@testuser.com`. Con un email común, Mercado Pago responde *"Una de las partes con la que intentás hacer el pago es de prueba"*.
-2. En Mercado Pago, elegir **Tarjeta** (sin cuenta): Mastercard `5031 7557 3453 0604`, vencimiento `11/30`, código `123`, DNI `12345678`.
-3. El nombre del titular define el resultado: `APRO` aprobado, `OTHE` rechazado, `CONT` pendiente.
+1. **Crear el comprador de prueba**, una sola vez: Mercado Pago Developers → Tus integraciones → la aplicación → **Cuentas de prueba → Crear cuenta de prueba**, tipo **Comprador**, país Argentina. El panel da el usuario y la contraseña. Si al ingresar pide un código de verificación, son los últimos 6 dígitos del ID de la cuenta.
+2. En una ventana de incógnito, hacer la compra en la tienda y elegir **Mercado Pago**.
+3. En Mercado Pago, **ingresar con el comprador de prueba** y pagar con la tarjeta Mastercard `5031 7557 3453 0604`, vencimiento `11/30`, código `123`, DNI `12345678`.
+4. El nombre del titular define el resultado: `APRO` aprobado, `OTHE` rechazado, `CONT` pendiente.
+5. Al volver a la tienda, el seguimiento pasa solo a "Pago confirmado": lo confirma el webhook y se descuenta el stock.
+
+Sin el comprador de prueba, el flujo se puede probar pagando por **transferencia** y confirmando el pago desde el panel admin, que usa la misma función `confirmar_pago` que el webhook.
 
 Para que el webhook funcione, Mercado Pago tiene que poder llegar a la URL: en Vercel (https), no en `localhost`. En Mercado Pago Developers → Webhooks se configura la URL **completa** `https://<dominio>/api/webhooks/mercadopago` con el evento **Pagos**, y la clave secreta que genera va en `MERCADOPAGO_WEBHOOK_SECRET`. (Con solo el dominio, los avisos llegan a la portada y Mercado Pago recibe 405.)
 
